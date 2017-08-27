@@ -22,9 +22,8 @@ object UsageTest {
     import spark.implicits._
 
     //Read Dataset
-    val initial = spark.read.format("csv").option("header", true).schema(struct).load("resources/2010-12-01.csv")
+    val initial = spark.read.format("csv").option("header", true).schema(struct).load("resources/test.csv")
     val transformed = SimpleTransformer.transform(mappings, initial)
-
     transformed.show
     spark.stop
   }

@@ -1,8 +1,11 @@
 package org.singaj.test
+import org.apache.spark.SparkConf
+import org.apache.spark.sql.SparkSession
 import org.scalatest.FunSuite
 import org.apache.spark.sql.types.{LongType, StructField, StructType}
 import org.singaj.mapdocreader.JSONMapDocReader
 import org.singaj.rules.Transformations
+import org.singaj.simpletrans.SimpleTransformer
 
 
 /**
@@ -14,6 +17,16 @@ class GenericTester extends FunSuite {
   val mapperError = new JSONMapDocReader("resources/sampleError.json")
   val transformations = mapper.getTransformations
   val struct = mapper.getFieldStructure
+  //Usual Spark stuff
+  val sc = new SparkConf().setAppName("Peace").setMaster("local")
+  val spark = SparkSession.builder.config(sc).getOrCreate
+  import spark.implicits._
+
+  //Read Dataset
+  val initial = spark.read.format("csv").option("header", true).schema(struct).load("resources/2010-12-01.csv")
+  val transformed = SimpleTransformer.transform(transformations, initial)
+  val take5 = transformed.take(5)
+
   test("Create JSONMapDocReader with valid file must return mapper object"){
     assert(mapper.isInstanceOf[JSONMapDocReader])
   }
@@ -53,6 +66,15 @@ class GenericTester extends FunSuite {
 
   test("getFieldStruct on SampleError.json must StructField of 0 length"){
     assert(mapperError.getFieldStructure.length == 0)
+  }
+
+  test("simpleTransformer DirectMap on Quality should have produce Q1"){
+    assert(transformed.select("Quantity").take(5) === transformed.select("Q1").take(5))
+  }
+
+  test("simpleTransformer DefaultMap on Currency should equal USD"){
+    val curr = transformed.select("Currency").take(5)
+    curr.foreach(c => assert(c.mkString == "USD"))
   }
 
 }
