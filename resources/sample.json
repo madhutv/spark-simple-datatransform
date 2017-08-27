@@ -4,27 +4,17 @@
       {
         "ttype": "DirectMap",
         "rule": "Quantity",
-        "dest": "Ganesh"
+        "dest": "Q1"
       },
       {
         "ttype": "DirectMap",
         "rule": "UnitPrice",
-        "dest": "Samana"
+        "dest": "UP"
       },
       {
         "ttype": "DefaultMap",
         "rule": "USD",
         "dest": "Currency"
-      },
-      {
-        "ttype": "DefaultMap",
-        "rule": "Peace",
-        "dest": "Baby"
-      },
-      {
-        "ttype": "DefaultMap",
-        "rule": "Peace",
-        "dest": "Family"
       }
     ],
     "struct": [

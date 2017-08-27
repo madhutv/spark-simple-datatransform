@@ -1,17 +1,18 @@
 package org.singaj.mapdocreader
 
 import scala.io.Source.fromFile
-import scala.util.{Try, Failure, Success}
+import scala.util.{Failure, Success, Try}
 import cats.syntax.either._
-import io.circe.{Json, HCursor, Decoder, Encoder}
+import io.circe.{Decoder, Encoder, Json}
 import io.circe.parser.parse
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
+import org.apache.spark.sql.types.StructType
 
 
 /**
   * Created by madhu on 8/26/17.
   */
-class JSONMapDocReader(filePath: String) extends MapDocReader {
+class JSONMapDocReader(filePath: String) extends MapDocReader with MapperConsts{
 
   /**
     * @constructor Reads file from given path.
@@ -19,7 +20,7 @@ class JSONMapDocReader(filePath: String) extends MapDocReader {
     *              On Failure, throws and error
     */
   protected val fileContents: Try[String] = Try(fromFile(filePath).getLines().mkString)
-  val jsonDoc = fileContents match {
+  val jsonDoc: Json = fileContents match {
     case Failure(f) => throw new Error(f)
     case Success(json) => parse(json).getOrElse(Json.Null)
   }
@@ -32,6 +33,34 @@ class JSONMapDocReader(filePath: String) extends MapDocReader {
   private implicit val structDecoder: Decoder[FieldStructure] = deriveDecoder[FieldStructure]
   private implicit val structEncoder: Encoder[FieldStructure] = deriveEncoder[FieldStructure]
 
-  
+  //Get cursor for Transformations
+  private val cursor = jsonDoc.hcursor.downField(TRANSFORMATIONS)
+
+  /**
+    * Gets transformations defined in JSON file
+    * @return List[Transformations]: List of transformations
+    */
+  def getTransformations: List[Transformations] = {
+    val transformations = cursor.get[List[Transformations]](TRANSFORMS)
+    transformations match {
+      case Left(failure) => throw new Error("Failed to create Transformation case class " + failure)
+      case Right(trans) => trans
+    }
+  }
+
+  /**
+    * Reads Field Structure from json and builds StructType
+    * @return StructType: On Error, Empty StructType will be returned
+    *                     On Success, StructType will be generated
+    */
+  def getFieldStructure: StructType = {
+    val structInfo = cursor.get[List[FieldStructure]](STRUCT)
+    structInfo match {
+      case Left(failure) =>
+        println("There was and error while retrieving Struct details proceeding without Struct ", failure)
+        StructType(List())
+      case Right(struct) => StructType(structFieldBuilder(struct, List()))
+    }
+  }
 
 }
