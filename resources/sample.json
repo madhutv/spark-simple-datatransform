@@ -1,0 +1,73 @@
+{
+  "transformations": {
+    "transforms": [
+      {
+        "ttype": "DirectMap",
+        "rule": "Quantity",
+        "dest": "Ganesh"
+      },
+      {
+        "ttype": "DirectMap",
+        "rule": "UnitPrice",
+        "dest": "Samana"
+      },
+      {
+        "ttype": "DefaultMap",
+        "rule": "USD",
+        "dest": "Currency"
+      },
+      {
+        "ttype": "DefaultMap",
+        "rule": "Peace",
+        "dest": "Baby"
+      },
+      {
+        "ttype": "DefaultMap",
+        "rule": "Peace",
+        "dest": "Family"
+      }
+    ],
+    "struct": [
+      {
+        "name": "invoiceno",
+        "datatype": "LongType",
+        "nullable": true
+      },
+      {
+        "name": "stockCode",
+        "datatype": "StringType",
+        "nullable": true
+      },
+      {
+        "name": "description",
+        "datatype": "StringType",
+        "nullable": true
+      },
+      {
+        "name": "quantity",
+        "datatype": "IntegerType",
+        "nullable": true
+      },
+      {
+        "name": "invoiceDate",
+        "datatype": "DateType",
+        "nullable": true
+      },
+      {
+        "name": "unitPrice",
+        "datatype": "DoubleType",
+        "nullable": true
+      },
+      {
+        "name": "customer_id",
+        "datatype": "DoubleType",
+        "nullable": true
+      },
+      {
+        "name": "country",
+        "datatype": "StringType",
+        "nullable": true
+      }
+    ]
+  }
+}

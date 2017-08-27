@@ -1,0 +1,32 @@
+{
+  "transformations": {
+    "transforms": [
+      {
+        "ttype": "DirectMap",
+        "source": "Quantity",
+        "dest": "Ganesh"
+      },
+      {
+        "ttype": "DirectMap",
+        "source": "UnitPrice",
+        "dest": "Samana"
+      },
+      {
+        "ttype": "DefaultMap",
+        "source": "USD",
+        "dest": "Currency"
+      },
+      {
+        "ttype": "DefaultMap",
+        "source": "Peace",
+        "dest": "Baby"
+      },
+      {
+        "ttype": "DefaultMap",
+        "source": "Peace",
+        "dest": "Family"
+      }
+    ]
+
+  }
+}
