@@ -1,7 +1,8 @@
 package org.singaj.test
 import org.scalatest.FunSuite
-import org.apache.spark.sql.types.{StructType, StructField, LongType}
-import org.singaj.mapdocreader.{JSONMapDocReader, Transformations}
+import org.apache.spark.sql.types.{LongType, StructField, StructType}
+import org.singaj.mapdocreader.JSONMapDocReader
+import org.singaj.rules.Transformations
 
 
 /**

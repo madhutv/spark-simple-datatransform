@@ -1,4 +1,4 @@
-package org.singaj.mapdocreader
+package org.singaj.rules
 
 /**
   * Created by madhu on 8/26/17.

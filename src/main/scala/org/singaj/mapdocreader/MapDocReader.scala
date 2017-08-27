@@ -1,5 +1,6 @@
 package org.singaj.mapdocreader
 import org.apache.spark.sql.types._
+import org.singaj.rules.{FieldStructure, Transformations}
 /**
   * Created on 8/26/17.
   * Abstract class to read Mapping Document

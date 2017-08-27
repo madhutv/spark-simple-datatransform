@@ -7,20 +7,22 @@ import io.circe.{Decoder, Encoder, Json}
 import io.circe.parser.parse
 import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import org.apache.spark.sql.types.StructType
+import org.singaj.rules.MapperConsts
+import org.singaj.rules.{FieldStructure, Transformations}
 
 
 /**
   * Created by madhu on 8/26/17.
   */
-class JSONMapDocReader(filePath: String) extends MapDocReader with MapperConsts{
+class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperConsts{
 
   /**
     * @constructor Reads file from given path.
     *              On success, parses json file and stores in jsonDoc
     *              On Failure, throws and error
     */
-  protected val fileContents: Try[String] = Try(fromFile(filePath).getLines().mkString)
-  val jsonDoc: Json = fileContents match {
+  protected lazy val fileContents: Try[String] = Try(fromFile(filePath).getLines().mkString)
+  lazy val jsonDoc: Json = fileContents match {
     case Failure(f) => throw new Error(f)
     case Success(json) => parse(json).getOrElse(Json.Null)
   }
