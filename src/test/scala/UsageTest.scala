@@ -1,5 +1,6 @@
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions._
 import org.singaj.mapdocreader.JSONMapDocReader
 import org.singaj.simpletrans.SimpleTransformer
 
@@ -23,6 +24,7 @@ object UsageTest {
     //Read Dataset
     val initial = spark.read.format("csv").option("header", true).schema(struct).load("resources/test.csv")
     val transformed = SimpleTransformer.transform(mappings, initial)
+    //val temp = transformed.withColumn("temp", expr("concat(stockCode, '*', Currency, '$')")).show
     transformed.show
     spark.stop
   }

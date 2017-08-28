@@ -15,7 +15,28 @@
         "ttype": "DefaultMap",
         "rule": "USD",
         "dest": "Currency"
+      },
+      {
+        "ttype": "IfElse",
+        "rule": "case when Quantity = 6 then 9 else '' end",
+        "dest": "Q1to9"
+      },
+      {
+        "ttype": "Concat",
+        "rule": "(stockCode, '*', Currency, '$')",
+        "dest": "CurStock"
+      },
+      {
+        "ttype": "Concat",
+        "rule": "(stockCode, '_P')",
+        "dest": "PstockCode"
+      },
+      {
+        "ttype": "Expression",
+        "rule": "case when Q1 = 6 then unitPrice else 0 end",
+        "dest": "UPQ1"
       }
+
     ],
     "struct": [
       {

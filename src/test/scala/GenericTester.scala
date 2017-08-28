@@ -1,11 +1,13 @@
 package org.singaj.test
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
+import org.apache.spark.sql.functions._
 import org.scalatest.FunSuite
 import org.apache.spark.sql.types.{LongType, StructField, StructType}
 import org.singaj.mapdocreader.JSONMapDocReader
 import org.singaj.rules.Transformations
 import org.singaj.simpletrans.SimpleTransformer
+
 
 
 /**
@@ -23,9 +25,9 @@ class GenericTester extends FunSuite {
   import spark.implicits._
 
   //Read Dataset
-  val initial = spark.read.format("csv").option("header", true).schema(struct).load("resources/2010-12-01.csv")
+  val initial = spark.read.format("csv").option("header", true).schema(struct).load("resources/test.csv")
   val transformed = SimpleTransformer.transform(transformations, initial)
-  val take5 = transformed.take(5)
+  val take5 = transformed.take(3)
 
   test("Create JSONMapDocReader with valid file must return mapper object"){
     assert(mapper.isInstanceOf[JSONMapDocReader])
@@ -35,8 +37,8 @@ class GenericTester extends FunSuite {
     assertThrows[Error](new JSONMapDocReader("Gibarish"))
   }
 
-  test("GetTransformation on Sample.json must yield 5 transformations"){
-    assert(transformations.length == 3)
+  test("GetTransformation on Sample.json must yield 7 transformations"){
+    assert(transformations.length == 7)
   }
 
   test("GetTransformation on Sample.json must be of Transformation(ttype, rule, dest)"){
@@ -75,6 +77,25 @@ class GenericTester extends FunSuite {
   test("simpleTransformer DefaultMap on Currency should equal USD"){
     val curr = transformed.select("Currency").take(5)
     curr.foreach(c => assert(c.mkString == "USD"))
+  }
+
+  test("simpleTransformer ifElse case when Quantity = 6 then 9 else '' end Q1to9 must produce column" +
+    "Q1to9 such that if Quality is 6, Q1to9 should be 9, else empty"){
+    val curr = transformed.select("Quantity", "Q1to9").take(5)
+    curr.foreach(c => assert((c(0) == 6 && c(1) == "9") || c(0) != 6 && c(1) == ""))
+  }
+
+  test("simpleTransformer concat stockCode, '*', Currency, '$' must produce column" +
+    "CurStock such that if stockCode*Currency$"){
+    val transformedCount = transformed.count
+    val curr = transformed.filter("CurStock == concat(stockCode, '*', Currency, '$') ").count()
+    assert(curr == transformedCount)
+  }
+
+  test("simpleTransformer expression case when Q1 = 6 then unitPrice else 0 end must product column" +
+    "UPQ1 such as above"){
+    val curr = transformed.select("Q1","unitPrice", "UPQ1").take(5)
+    curr.foreach(c => assert((c(0) == 6 && c(2) == c(1)) || c(0) != 6 && c(2) == 0))
   }
 
 }

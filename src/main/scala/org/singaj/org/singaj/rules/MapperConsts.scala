@@ -12,4 +12,7 @@ trait MapperConsts {
   //consts used in transformations
   val DIRECT_MAP = "DirectMap"
   val DEFAULT_MAP = "DefaultMap"
+  val IF_ELSE = "IfElse"
+  val EXPRESSION = "Expression"
+  val CONCAT = "Concat"
 }

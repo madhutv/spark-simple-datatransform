@@ -34,6 +34,50 @@ class SimpleTransformer {
     ds.withColumn(dest, lit(value))
   }
 
+  /**
+    * Performs if else transformations
+    * @example ifElse(ds, "case when a = 5 then a * 5 else a end", dest)
+    *          The above statement will create a dest column such that if value
+    *          in column a = 5 then dest will be 5 * 5 else dest will be value in
+    *          column a
+    * @param ds: Dataset[_] Dataset on which the transformation needs to be performed
+    * @param rule: String
+    * @param dest: String Column name of destination
+    * @return Transformed Dataset
+    */
+  def ifElse(ds: Dataset[_], rule: String, dest: String): Dataset[_] = {
+    expression(ds, rule, dest)
+  }
+
+  /**
+    * Concatenates Columns or Strings with column
+    * @example concat(ds, "(stock, '*', currency, '$')", stockCurrency)
+    *          This will create or replace a column stockCurrency with value as
+    *          value in stock column + * + value in currency column + $
+    * @param ds: Dataset[_] Dataset on which the transformation needs to be performed
+    * @param rule: String
+    * @param dest: String Column name of destination
+    * @return Transformed Dataset
+    */
+  def concat(ds: Dataset[_], rule: String, dest: String): Dataset[_] = {
+    expression(ds, "concat" + rule , dest)
+  }
+
+  /**
+    * Populates column with expression provided.
+    * @example expression(ds, trim(" Jolly "), jolly) will create column or
+    *          replace existing jolly column with Jolly
+    * @param ds: Dataset[_] Dataset on which the transformation needs to be performed
+    * @param rule: String
+    * @param dest: String Column name of destination
+    * @return Transformed Dataset
+    *
+    */
+  def expression(ds: Dataset[_], rule: String, dest: String): Dataset[_] = {
+    ds.withColumn(dest, expr(rule))
+  }
+
+
 }
 
 object SimpleTransformer extends SimpleTransformer with MapperConsts{
@@ -49,8 +93,10 @@ object SimpleTransformer extends SimpleTransformer with MapperConsts{
       case Nil => ds
       case x::xs => {
         val append =  x match {
-          case Transformations(DIRECT_MAP, x, y) => directMap(ds, x, y)
-          case Transformations(DEFAULT_MAP, x, y) => defaultMap(ds, x, y)
+          case Transformations(DIRECT_MAP, a, b) => directMap(ds, a, b)
+          case Transformations(DEFAULT_MAP, a, b)  => defaultMap(ds, a, b)
+          case Transformations(IF_ELSE | EXPRESSION, a, b)  => expression(ds, a, b)
+          case Transformations(CONCAT, a, b) => concat(ds, a, b)
           case _ => ds
         }
         transform(xs, append)

@@ -47,19 +47,19 @@ abstract class MapDocReader {
       case Nil => sf.reverse
       case x::xs => {
         val structFields =  x match {
-          case FieldStructure(x, "StringType", y) => StructField(x, StringType, y) :: sf
-          case FieldStructure(x, "IntegerType", y) => StructField(x, IntegerType, y) :: sf
-          case FieldStructure(x, "DoubleType", y) => StructField(x, DoubleType, y) :: sf
-          case FieldStructure(x, "LongType", y) => StructField(x, LongType, y) :: sf
-          case FieldStructure(x, "DateType", y) => StructField(x, DateType, y) :: sf
-          case FieldStructure(x, "BinaryType", y) => StructField(x, BinaryType, y) :: sf
-          case FieldStructure(x, "BooleanType", y) => StructField(x, BooleanType, y) :: sf
-          case FieldStructure(x, "TimestampType", y) => StructField(x, TimestampType, y) :: sf
-          case FieldStructure(x, "FloatType", y) => StructField(x, FloatType, y) :: sf
-          case FieldStructure(x, "ByteType", y) => StructField(x, ByteType, y) :: sf
-          case FieldStructure(x, "ShortType", y) => StructField(x, ShortType, y) :: sf
-          case FieldStructure(x, "CalendarIntervalType", y) => StructField(x, CalendarIntervalType, y) :: sf
-          case FieldStructure(x, "NullType", y) => StructField(x, NullType, y) :: sf
+          case FieldStructure(a, "StringType", y) => StructField(a, StringType, y) :: sf
+          case FieldStructure(a, "IntegerType", y) => StructField(a, IntegerType, y) :: sf
+          case FieldStructure(a, "DoubleType", y) => StructField(a, DoubleType, y) :: sf
+          case FieldStructure(a, "LongType", y) => StructField(a, LongType, y) :: sf
+          case FieldStructure(a, "DateType", y) => StructField(a, DateType, y) :: sf
+          case FieldStructure(a, "BinaryType", y) => StructField(a, BinaryType, y) :: sf
+          case FieldStructure(a, "BooleanType", y) => StructField(a, BooleanType, y) :: sf
+          case FieldStructure(a, "TimestampType", y) => StructField(a, TimestampType, y) :: sf
+          case FieldStructure(a, "FloatType", y) => StructField(a, FloatType, y) :: sf
+          case FieldStructure(a, "ByteType", y) => StructField(a, ByteType, y) :: sf
+          case FieldStructure(a, "ShortType", y) => StructField(a, ShortType, y) :: sf
+          case FieldStructure(a, "CalendarIntervalType", y) => StructField(a, CalendarIntervalType, y) :: sf
+          case FieldStructure(a, "NullType", y) => StructField(a, NullType, y) :: sf
         }
         structFieldBuilder(xs, structFields )
       }
