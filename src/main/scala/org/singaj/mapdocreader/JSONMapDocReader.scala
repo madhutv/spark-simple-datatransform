@@ -30,10 +30,12 @@ class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperCon
   /**
     * Implicit conversion required by io.circe for handling json to case class conversions
     */
-  private implicit val transDecoder: Decoder[Transformations] = deriveDecoder[Transformations]
-  private implicit val transEncoder: Encoder[Transformations] = deriveEncoder[Transformations]
-  private implicit val structDecoder: Decoder[FieldStructure] = deriveDecoder[FieldStructure]
-  private implicit val structEncoder: Encoder[FieldStructure] = deriveEncoder[FieldStructure]
+  implicit val transDecoder: Decoder[Transformations] = deriveDecoder[Transformations]
+  implicit val encodeUser: Encoder[Transformations] = Encoder.forProduct3("ttype", "rule", "dest")(e => (e.ttype, e.rule, e.dest))
+  //implicit val transEncoder: Encoder[Transformations] = deriveEncoder[Transformations]
+  implicit val structDecoder: Decoder[FieldStructure] = deriveDecoder[FieldStructure]
+  //implicit val structEncoder: Encoder[FieldStructure] = deriveEncoder[FieldStructure]
+  implicit val structEncoder: Encoder[FieldStructure] = Encoder.forProduct3("name", "datatype", "nullable")(e => (e.name, e.datatype, e.nullable))
 
   //Get cursor for Transformations
   private val cursor = jsonDoc.hcursor.downField(TRANSFORMATIONS)

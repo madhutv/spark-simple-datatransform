@@ -1,9 +1,15 @@
+import AssemblyKeys._
+
+//sbt-assembly
+assemblySettings
+
 name := "SimpleDataTransformer"
 
-version := "1.0"
-
 scalaVersion := "2.11.8"
+
 organization := "org.singaj"
+
+mainClass := Some("UsageTest")
 
 libraryDependencies ++= Seq(
   "io.circe" %% "circe-core" % "0.8.0",
@@ -13,3 +19,5 @@ libraryDependencies ++= Seq(
   "org.apache.spark" %% "spark-sql" % "2.2.0" % "provided",
   "org.scalatest" %% "scalatest" % "3.0.3" % "test"
 )
+
+

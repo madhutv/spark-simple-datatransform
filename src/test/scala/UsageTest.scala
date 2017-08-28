@@ -19,7 +19,6 @@ object UsageTest {
     //Usual Spark stuff
     val sc = new SparkConf().setAppName("Peace").setMaster("local")
     val spark = SparkSession.builder.config(sc).getOrCreate
-    import spark.implicits._
 
     //Read Dataset
     val initial = spark.read.format("csv").option("header", true).schema(struct).load("resources/test.csv")
