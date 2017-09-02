@@ -99,4 +99,13 @@ class GenericTester extends FunSuite {
     curr.foreach(c => assert((c(0) == 6 && c(2) == c(1)) || c(0) != 6 && c(2) == 0))
   }
 
+  test("stSelect on UPQ1 as UPQ3, UPQ2, PstockCode, Q1, Q1to9 as Q1to92, must exactly return" +
+    "UPQ3, UPQ2, PstockCode, Q1 and Q1to92 columns"){
+    val expArr = Array("UPQ3", "UPQ2", "PstockCode", "Q1", "Q1to92")
+    val cols = transformed.stSelect(selects).columns
+    assert(cols.length == 5)
+    expArr.foreach(a => assert(cols.contains(a)))
+
+  }
+
 }
