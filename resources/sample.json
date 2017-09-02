@@ -1,14 +1,4 @@
 {
-    "InputFileFormat" : {
-      "format": "csv",
-      "delimiter": "|",
-      "header": true
-    },
-    "OutputFileFormat": {
-      "format": "csv",
-      "delimiter": "|",
-      "header": true
-    },
     "transforms": [
       {
         "ttype": "DirectMap",
