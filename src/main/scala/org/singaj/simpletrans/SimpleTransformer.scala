@@ -11,6 +11,8 @@ import org.singaj.rules.{MapperConsts, Transformations}
 
 class SimpleTransformer {
 
+  implicit def datasetToSimTrans(ds: Dataset[_]) = SimpleTransformer
+
   /**
     * DirectMap is used when one column simply needs to be copied over to
     * another column.
@@ -93,14 +95,24 @@ object SimpleTransformer extends SimpleTransformer with MapperConsts{
       case Nil => ds
       case x::xs => {
         val append =  x match {
-          case Transformations(DIRECT_MAP, a, b) => directMap(ds, a, b)
-          case Transformations(DEFAULT_MAP, a, b)  => defaultMap(ds, a, b)
-          case Transformations(IF_ELSE | EXPRESSION, a, b)  => expression(ds, a, b)
-          case Transformations(CONCAT, a, b) => concat(ds, a, b)
+          case Transformations(Some(DIRECT_MAP), a, b) => directMap(ds, a, b)
+          case Transformations(Some(DEFAULT_MAP), a, b)  => defaultMap(ds, a, b)
+          case Transformations(Some(IF_ELSE) | Some(EXPRESSION), a, b)  => expression(ds, a, b)
+          case Transformations(Some(CONCAT), a, b) => concat(ds, a, b)
+          case Transformations(a, b, c) => expression(ds, b, c)
           case _ => ds
         }
         transform(xs, append)
       }
+    }
+  }
+
+
+
+  def select(ds: Dataset[_], selCols: Array[String]): Dataset[_] = {
+    selCols match {
+      case Array() => ds
+      case _ => ds.selectExpr(selCols: _*)
     }
   }
 

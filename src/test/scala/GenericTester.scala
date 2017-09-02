@@ -47,7 +47,7 @@ class GenericTester extends FunSuite {
 
   test("First element from sample.json GetTransformation must be Transformation(DirectMap, Quantity, Q1)"){
     val firstT = transformations.head
-    assert(firstT == Transformations("DirectMap", "Quantity", "Q1"))
+    assert(firstT == Transformations(Some("DirectMap"), "Quantity", "Q1"))
   }
 
  /* test("GetTransformation on SampleError.jso must throw an Error"){

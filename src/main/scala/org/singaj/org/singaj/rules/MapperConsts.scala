@@ -15,4 +15,5 @@ trait MapperConsts {
   val IF_ELSE = "IfElse"
   val EXPRESSION = "Expression"
   val CONCAT = "Concat"
+  val SELECT = "select"
 }

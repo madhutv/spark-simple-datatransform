@@ -41,6 +41,16 @@ class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperCon
 
   }
 
+  def getSelectColumns: Array[String] = {
+    Try{
+      val sel= jsonDoc \ SELECT
+      sel.extract[String].split(",").map(_.trim)
+    } match {
+      case Failure(f) => println("Din't find select statement"); Array()
+      case Success(s) => s
+    }
+  }
+
   /**
     * Reads Field Structure from json and builds StructType
     * @return StructType: On Error, Empty StructType will be returned

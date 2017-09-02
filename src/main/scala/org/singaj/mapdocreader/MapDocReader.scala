@@ -36,6 +36,8 @@ abstract class MapDocReader {
     */
   def getFieldStructure: StructType
 
+  def getSelectColumns: Array[String]
+
   /**
     * Recursive method takes in List of FieldStructure and generates List of spark StructField
     * @param fs List[FieldStructure]
