@@ -28,6 +28,13 @@ class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperCon
 
   /**
     * Gets transformations defined in JSON file
+    * See resources/sample.json for sample JSON format.
+    * In general, tranformations will be within an array element "transforms"
+    * Each object within this array may have either 2 or 3 parameters:
+    *   ttype: Specifies type of tranformations like DirectMap, DefaultValue or Expression
+    *          This element is optional, and if not specified Expression will be assumed
+    *   rule: Will contain transformation rule
+    *   dest: Name of destination column
     * @return List[Transformations]: List of transformations
     */
   def getTransformations: List[Transformations] = {
@@ -41,6 +48,11 @@ class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperCon
 
   }
 
+  /**
+    * Gets the columns to be selected.
+    * @example : Example of json format: "select": "UPQ1 as UPQ3, UPQ2, PstockCode, Q1, Q1to9 as Q1to92"
+    * @return Array of columns name to be selected
+    */
   def getSelectColumns: Array[String] = {
     Try{
       val sel= jsonDoc \ SELECT
@@ -52,7 +64,8 @@ class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperCon
   }
 
   /**
-    * Reads Field Structure from json and builds StructType
+    * Reads Field Structure from json and builds StructType. See resources/sample.json for
+    * sample json file
     * @return StructType: On Error, Empty StructType will be returned
     *                     On Success, StructType will be generated
     */

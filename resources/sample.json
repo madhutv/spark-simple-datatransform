@@ -51,7 +51,7 @@
       }
 
     ],
-    "select": "UPQ1, UPQ2, PstockCode, Q1, Q1to9",
+    "select": "UPQ1 as UPQ3, UPQ2, PstockCode, Q1, Q1to9 as Q1to92",
     "struct": [
       {
         "name": "invoiceno",
