@@ -44,9 +44,14 @@
         "ttype": "Expression",
         "rule": "case when Q1 = 6 then unitPrice else 0 end",
         "dest": "UPQ1"
+      },
+      {
+        "rule": "case when Q1 = 6 then unitPrice else 0 end",
+        "dest": "UPQ2"
       }
 
     ],
+    "select": "UPQ1, UPQ2, PstockCode, Q1, Q1to9",
     "struct": [
       {
         "name": "invoiceno",

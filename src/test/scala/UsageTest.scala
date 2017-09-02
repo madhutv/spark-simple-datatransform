@@ -16,6 +16,7 @@ object UsageTest {
     val mappings = jsonT.getTransformations
     //Read StructType rules
     val struct = jsonT.getFieldStructure
+    val selectCols = jsonT.getSelectColumns
 
     //Usual Spark stuff
     val sc = new SparkConf().setAppName("Peace").setMaster("local")
@@ -24,6 +25,7 @@ object UsageTest {
     //Read Dataset
     val initial = spark.read.format("csv").option("header", true).schema(struct).load("resources/test.csv")
     val transformed = SimpleTransformer.transform(mappings, initial)
+    SimpleTransformer.select(transformed, selectCols).show
     //val temp = transformed.withColumn("temp", expr("concat(stockCode, '*', Currency, '$')")).show
     transformed.show
     spark.stop
