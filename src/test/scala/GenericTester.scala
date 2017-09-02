@@ -6,7 +6,7 @@ import org.scalatest.FunSuite
 import org.apache.spark.sql.types.{LongType, StructField, StructType}
 import org.singaj.mapdocreader.JSONMapDocReader
 import org.singaj.rules.Transformations
-import org.singaj.simpletrans.SimpleTransformer
+import org.singaj.simpletrans.SimpleTransformer._
 
 
 
@@ -19,6 +19,7 @@ class GenericTester extends FunSuite {
   val mapperError = new JSONMapDocReader("resources/sampleError.json")
   val transformations = mapper.getTransformations
   val struct = mapper.getFieldStructure
+  val selects = mapper.getSelectColumns
   //Usual Spark stuff
   val sc = new SparkConf().setAppName("Peace").setMaster("local")
   val spark = SparkSession.builder.config(sc).getOrCreate
@@ -26,7 +27,7 @@ class GenericTester extends FunSuite {
 
   //Read Dataset
   val initial = spark.read.format("csv").option("header", true).schema(struct).load("resources/test.csv")
-  val transformed = SimpleTransformer.transform(transformations, initial)
+  val transformed = initial.stTransform(transformations)
   val take5 = transformed.take(3)
 
   test("Create JSONMapDocReader with valid file must return mapper object"){
@@ -37,8 +38,8 @@ class GenericTester extends FunSuite {
     assertThrows[Error](new JSONMapDocReader("Gibarish"))
   }
 
-  test("GetTransformation on Sample.json must yield 7 transformations"){
-    assert(transformations.length == 7)
+  test("GetTransformation on Sample.json must yield 8 transformations"){
+    assert(transformations.length == 8)
   }
 
   test("GetTransformation on Sample.json must be of Transformation(ttype, rule, dest)"){
