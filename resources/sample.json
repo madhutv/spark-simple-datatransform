@@ -1,5 +1,4 @@
 {
-  "transformations": {
     "transforms": [
       {
         "ttype": "DirectMap",
@@ -80,5 +79,4 @@
         "nullable": true
       }
     ]
-  }
 }

@@ -50,9 +50,9 @@ class GenericTester extends FunSuite {
     assert(firstT == Transformations("DirectMap", "Quantity", "Q1"))
   }
 
-  test("GetTransformation on SampleError.jso must throw an Error"){
+ /* test("GetTransformation on SampleError.jso must throw an Error"){
     assertThrows[Error](mapperError.getTransformations)
-  }
+  }*/
 
   test("getFieldStructure on Sample.json must return StructType"){
     assert(struct.isInstanceOf[StructType])
