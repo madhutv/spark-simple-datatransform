@@ -2,7 +2,7 @@ package org.singaj.simpletrans
 
 import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.functions._
-import org.singaj.rules.{MapperConsts, Transformations, SimpleTransformation}
+import org.singaj.rules._
 
 
 /**
@@ -102,6 +102,7 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts{
           case SimpleTransformation(Some(IF_ELSE) | Some(EXPRESSION), a, b)  => expression(a, b)(ds)
           case SimpleTransformation(Some(CONCAT), a, b) => concat(a, b)(ds)
           case SimpleTransformation(a, b, c) => expression( b, c)(ds)
+          case SplitTransformation(a, b, c) => splitTrans(ds, a, b, c)
           case _ => ds
         }
         stTransform(xs)(append)
@@ -121,6 +122,16 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts{
       case Array() => ds
       case _ => ds.selectExpr(selCols: _*)
     }
+  }
+
+  private def splitTrans(ds: Dataset[_], cond: String, dest_row_trans: List[SimpleTransformation],
+                         source_row_trans: List[SimpleTransformation]) = {
+     ds.show
+     val transOn = ds.where(cond)
+     val destRows = stTransform(dest_row_trans)(transOn).toDF
+     val sourceRows = stTransform(source_row_trans)(transOn).toDF
+     val filterNotCond = ds.where("not(" + cond + ")").toDF
+     filterNotCond union destRows union sourceRows
   }
 
 }

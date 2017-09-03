@@ -8,6 +8,6 @@ case class SimpleTransformation(ttype: Option[String], rule: String, dest: Strin
   ttype.getOrElse("Expression")
 }
 
-case class SplitTransformation(name: String, dest_row_trans: List[Transformations],
-                      source_row_trans: List[Transformations]) extends Transformations
+case class SplitTransformation(name: String, dest_row_trans: List[SimpleTransformation],
+                      source_row_trans: List[SimpleTransformation]) extends Transformations
 
