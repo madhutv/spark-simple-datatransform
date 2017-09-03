@@ -51,7 +51,7 @@
       },
       {
         "ttype": "Where",
-        "rule": "Q1 != 6"
+        "rule": "Q1 == 6"
       },
       {
         "ttype": "Drop",
@@ -73,12 +73,8 @@
       ],
       "source_row_trans": [
         {
-          "rule": "Q1 * 5",
-          "dest": "UP"
-        },
-        {
-          "rule": "Q1to9 / 2",
-          "dest": "randCol"
+          "ttype": "Drop",
+          "rule": "1 == 1"
         }
       ]
     }],
