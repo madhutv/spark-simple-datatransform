@@ -124,6 +124,17 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts{
     }
   }
 
+  /**
+    * Private function to handle split transformations. i.e. creating multiple rows
+    * based on certain criteria
+    * @param ds: Dataset[_] : Input dataset
+    * @param cond: Condition to get records that need to be split
+    * @param dest_row_trans: SimpleTransformation to be performed on new rows. This will be a
+    *                      applied to records that satisfies cond
+    * @param source_row_trans: SimpleTransformation: Transformations that need to be applied
+    *                        on original rows that satisfied filter criteria
+    * @return Returns transformed records
+    */
   private def splitTrans(ds: Dataset[_], cond: String, dest_row_trans: List[SimpleTransformation],
                          source_row_trans: List[SimpleTransformation]) = {
      ds.show
