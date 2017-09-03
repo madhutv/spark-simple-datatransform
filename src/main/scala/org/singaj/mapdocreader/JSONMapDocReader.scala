@@ -17,6 +17,11 @@ class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperCon
   implicit val formats = DefaultFormats
 
   /**
+    * Get Input output file formats if needed
+    */
+  lazy val ioFileFormat: Map[String, String] = getIOFileFormat
+
+  /**
     * Get SplitTransformations if any of the transformations are marked as Split
     */
   lazy val splitT: List[SplitTransformation] = getSplitLogic
@@ -29,6 +34,20 @@ class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperCon
   val jsonDoc: JValue = fileContents match {
     case Failure(f) => throw new Error("Cant find file " + filePath +  f)
     case Success(json) => parse(json)
+  }
+
+  /**
+    * Get inputout file formats from JSON.
+    * @return
+    */
+  def getIOFileFormat: Map[String, String] = {
+    Try {
+      val trans= jsonDoc \ IO_FILE_FORMAT
+      trans.extract[Map[String, String]]
+    } match {
+      case Failure(f) => println("No transformations specified ", f); Map()
+      case Success(t) => t
+    }
   }
 
   /**
@@ -121,7 +140,7 @@ class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperCon
     trans match {
       case Nil => outputT.reverse
       case x::xs => val inBet = x match {
-        case SimpleTransformation(Some("Split"), a, b) =>
+        case SimpleTransformation(Some(SPLIT), a, b) =>
           val split = splitT.find(f => f.name == b.getOrElse(" ")).get
           SplitTransformation(a, split.dest_row_trans, split.source_row_trans) :: outputT
         case SimpleTransformation(a, b, c) => SimpleTransformation(a, b, c) :: outputT

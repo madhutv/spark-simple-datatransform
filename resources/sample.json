@@ -1,8 +1,14 @@
 {
+    "inputOutputFile": {
+      "inputFileFormat": "csv",
+      "inputFileDelimiter": ",",
+      "inputFileHasHeader": "true"
+    },
+
     "transforms": [
 
       {
-        "ttype": "DirectMap",
+        "ttype": "directMap",
         "rule": "Quantity",
         "dest": "Q1"
       },
@@ -11,32 +17,32 @@
         "dest": "randCol"
       },
       {
-        "ttype": "DirectMap",
+        "ttype": "directMap",
         "rule": "UnitPrice",
         "dest": "UP"
       },
       {
-        "ttype": "DefaultMap",
+        "ttype": "defaultMap",
         "rule": "USD",
         "dest": "Currency"
       },
       {
-        "ttype": "IfElse",
+        "ttype": "ifElse",
         "rule": "case when Quantity = 6 then 9 else '' end",
         "dest": "Q1to9"
       },
       {
-        "ttype": "Concat",
+        "ttype": "concat",
         "rule": "(stockCode, '*', Currency, '$')",
         "dest": "CurStock"
       },
       {
-        "ttype": "Concat",
+        "ttype": "concat",
         "rule": "(stockCode, '_P')",
         "dest": "PstockCode"
       },
       {
-        "ttype": "Expression",
+        "ttype": "expression",
         "rule": "case when Q1 = 6 then unitPrice else 0 end",
         "dest": "UPQ1"
       },
@@ -45,16 +51,16 @@
         "dest": "UPQ2"
       },
       {
-        "ttype": "Split",
+        "ttype": "split",
         "rule": "(stockCode = '84406B' or stockCode like '84%') and unitPrice != 2.55",
         "dest": "Q1to92Split"
       },
       {
-        "ttype": "Where",
+        "ttype": "where",
         "rule": "Q1 == 6"
       },
       {
-        "ttype": "Drop",
+        "ttype": "drop",
         "rule": "UP == 0"
       }
 
@@ -73,7 +79,7 @@
       ],
       "source_row_trans": [
         {
-          "ttype": "Drop",
+          "ttype": "drop",
           "rule": "1 == 1"
         }
       ]

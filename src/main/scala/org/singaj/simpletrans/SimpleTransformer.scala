@@ -9,7 +9,7 @@ import org.singaj.rules._
   * Created by madhu on 8/26/17.
   */
 
-class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts{
+class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts {
 
   /**
     * DirectMap is used when one column simply needs to be copied over to
