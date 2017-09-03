@@ -16,4 +16,5 @@ trait MapperConsts {
   val EXPRESSION = "Expression"
   val CONCAT = "Concat"
   val SELECT = "select"
+  val SPLIT = "split"
 }

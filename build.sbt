@@ -3,6 +3,8 @@ import AssemblyKeys._
 //sbt-assembly
 assemblySettings
 
+assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala = false)
+
 name := "SimpleDataTransformer"
 
 scalaVersion := "2.11.8"

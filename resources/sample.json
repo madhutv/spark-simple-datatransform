@@ -38,10 +38,38 @@
       {
         "rule": "case when Q1 = 6 then unitPrice else 0 end",
         "dest": "UPQ2"
+      },
+      {
+        "ttype": "Split",
+        "rule": "(stockCode = '84406B' or stockCode like '84%') and unitPrice != 2.55",
+        "dest": "Q1to92Split"
       }
 
     ],
-    "select": "UPQ1 as UPQ3, UPQ2, PstockCode, Q1, Q1to9 as Q1to92",
+    "split": [{
+      "name" : "Q1to92Split",
+      "dest_row_trans": [
+        {
+          "rule": "UPQ2 * Q1",
+          "dest": "UP"
+        },
+        {
+          "rule": "Q1to9 / 2",
+          "dest": "Q1to9"
+        }
+      ],
+      "source_row_trans": [
+        {
+          "rule": "Q1 * 5",
+          "dest": "UP"
+        },
+        {
+          "rule": "Q1to9 / 2",
+          "dest": "Q1to9"
+        }
+      ]
+    }],
+    "select": "UP, UPQ1 as UPQ3, UPQ2, PstockCode, Q1, Q1to9, Q1to9 as Q1to92",
     "struct": [
       {
         "name": "invoiceno",

@@ -16,6 +16,29 @@
         "source": "USD",
         "dest": "Currency"
       }
-    ]
+    ],
+    "split": {
+      "on" : "condition",
+      "dest_row_trans": [
+        {
+          "rule": "UPQ3 * Q1",
+          "dest": "Q1"
+        },
+        {
+          "rule": "Q1to92 / 2",
+          "dest": "Q1to92"
+        }
+      ],
+      "source_row_trans": [
+        {
+          "rule": "Q1 * 5",
+          "dest": "Q1"
+        },
+        {
+          "rule": "Q1to92 / 2",
+          "dest": "Q1to92"
+        }
+      ]
+    }
   }
 }

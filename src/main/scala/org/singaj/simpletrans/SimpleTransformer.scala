@@ -2,7 +2,7 @@ package org.singaj.simpletrans
 
 import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.functions._
-import org.singaj.rules.{MapperConsts, Transformations}
+import org.singaj.rules._
 
 
 /**
@@ -95,17 +95,17 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts{
   def stTransform(trans: List[Transformations])(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
     trans match {
       case Nil => ds
-      case x::xs => {
+      case x::xs =>
         val append =  x match {
-          case Transformations(Some(DIRECT_MAP), a, b) => directMap(a, b)(ds)
-          case Transformations(Some(DEFAULT_MAP), a, b)  => defaultMap(a, b)(ds)
-          case Transformations(Some(IF_ELSE) | Some(EXPRESSION), a, b)  => expression(a, b)(ds)
-          case Transformations(Some(CONCAT), a, b) => concat(a, b)(ds)
-          case Transformations(a, b, c) => expression( b, c)(ds)
+          case SimpleTransformation(Some(DIRECT_MAP), a, b) => directMap(a, b)(ds)
+          case SimpleTransformation(Some(DEFAULT_MAP), a, b)  => defaultMap(a, b)(ds)
+          case SimpleTransformation(Some(IF_ELSE) | Some(EXPRESSION), a, b)  => expression(a, b)(ds)
+          case SimpleTransformation(Some(CONCAT), a, b) => concat(a, b)(ds)
+          case SimpleTransformation(a, b, c) => expression( b, c)(ds)
+          case SplitTransformation(a, b, c) => splitTrans(ds, a, b, c)
           case _ => ds
         }
         stTransform(xs)(append)
-      }
     }
   }
 
@@ -124,6 +124,27 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts{
     }
   }
 
+  /**
+    * Private function to handle split transformations. i.e. creating multiple rows
+    * based on certain criteria
+    * @param ds: Dataset[_] : Input dataset
+    * @param cond: Condition to get records that need to be split
+    * @param dest_row_trans: SimpleTransformation to be performed on new rows. This will be a
+    *                      applied to records that satisfies cond
+    * @param source_row_trans: SimpleTransformation: Transformations that need to be applied
+    *                        on original rows that satisfied filter criteria
+    * @return Returns transformed records
+    */
+  private def splitTrans(ds: Dataset[_], cond: String, dest_row_trans: List[SimpleTransformation],
+                         source_row_trans: List[SimpleTransformation]) = {
+     ds.show
+     val transOn = ds.where(cond)
+     val destRows = stTransform(dest_row_trans)(transOn).toDF
+     val sourceRows = stTransform(source_row_trans)(transOn).toDF
+     val filterNotCond = ds.where("not(" + cond + ")").toDF
+     filterNotCond union destRows union sourceRows
+  }
+
 }
 
 /**
@@ -135,5 +156,5 @@ object SimpleTransformer{
     * @param ds: Input Dataset
     * @return SimpliTransfomer wrapping Dataset
     */
-  implicit def datasetToSimTrans(ds: Dataset[_]) = new SimpleTransformer(ds)
+  implicit def datasetToSimTrans(ds: Dataset[_]): SimpleTransformer = new SimpleTransformer(ds)
 }
