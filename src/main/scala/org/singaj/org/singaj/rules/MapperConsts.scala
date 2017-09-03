@@ -17,4 +17,6 @@ trait MapperConsts {
   val CONCAT = "Concat"
   val SELECT = "select"
   val SPLIT = "split"
+  val WHERE = "Where"
+  val DROP = "Drop"
 }

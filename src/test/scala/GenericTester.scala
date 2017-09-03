@@ -48,7 +48,7 @@ class GenericTester extends FunSuite {
 
   test("First element from sample.json GetTransformation must be Transformation(DirectMap, Quantity, Q1)"){
     val firstT = transformations.head
-    assert(firstT == SimpleTransformation(Some("DirectMap"), "Quantity", "Q1"))
+    assert(firstT == SimpleTransformation(Some("DirectMap"), "Quantity", Some("Q1")))
   }
 
  /* test("GetTransformation on SampleError.jso must throw an Error"){
@@ -99,11 +99,11 @@ class GenericTester extends FunSuite {
     curr.foreach(c => assert((c(0) == 6 && c(2) == c(1)) || c(0) != 6 && c(2) == 0))
   }
 
-  test("stSelect on UPQ1 as UPQ3, UPQ2, PstockCode, Q1, Q1to9 as Q1to92, must exactly return" +
-    "UPQ3, UPQ2, PstockCode, Q1 and Q1to92 columns"){
-    val expArr = Array("UPQ3", "UPQ2", "PstockCode", "Q1", "Q1to92")
+  test("stSelect on UP, UPQ1 as UPQ3, UPQ2, PstockCode, Q1, Q1to9, Q1to9 as Q1to92, randCol must exactly return" +
+    "UP, UPQ3, UPQ2, PstockCode, Q1, Q1to9 , randCol, and Q1to92 columns"){
+    val expArr = Array("UP", "UPQ3", "UPQ2", "PstockCode", "Q1", "Q1to9", "Q1to92", "randCol")
     val cols = transformed.stSelect(selects).columns
-    assert(cols.length == 5)
+    assert(cols.length == 8)
     expArr.foreach(a => assert(cols.contains(a)))
 
   }

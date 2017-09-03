@@ -122,7 +122,7 @@ class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperCon
       case Nil => outputT.reverse
       case x::xs => val inBet = x match {
         case SimpleTransformation(Some("Split"), a, b) =>
-          val split = splitT.find(f => f.name == b).get
+          val split = splitT.find(f => f.name == b.getOrElse(" ")).get
           SplitTransformation(a, split.dest_row_trans, split.source_row_trans) :: outputT
         case SimpleTransformation(a, b, c) => SimpleTransformation(a, b, c) :: outputT
       }

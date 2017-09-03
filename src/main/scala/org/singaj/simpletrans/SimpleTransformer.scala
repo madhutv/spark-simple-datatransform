@@ -20,8 +20,8 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts{
     *              This is determined implicitly
     * @return : Transformed Dataset
     */
-  def directMap(source: String, dest: String)(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
-    ds.withColumn(dest, col(source))
+  def directMap(source: String, dest: Option[String])(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
+    expression(source, dest)
   }
 
 
@@ -33,8 +33,9 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts{
     *              This is determined implicitly
     * @return : Transformed Dataset
     */
-  def defaultMap(value: String, dest: String)(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
-    ds.withColumn(dest, lit(value))
+  def defaultMap(value: String, dest: Option[String])(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
+   val destColumn: String = getOrThrow(dest, "defaultMap requires dest column")
+    ds.withColumn(destColumn , lit(value))
   }
 
   /**
@@ -49,7 +50,7 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts{
     *              This is determined implicitly
     * @return Transformed Dataset
     */
-  def ifElse( rule: String, dest: String)(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
+  def ifElse( rule: String, dest: Option[String])(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
     expression(rule, dest)(ds)
   }
 
@@ -64,7 +65,7 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts{
     *              This is determined implicitly
     * @return Transformed Dataset
     */
-  def concat(rule: String, dest: String)(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
+  def concat(rule: String, dest: Option[String])(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
     expression("concat" + rule , dest)(ds)
   }
 
@@ -80,8 +81,9 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts{
     * @return Transformed Dataset
     *
     */
-  def expression(rule: String, dest: String)(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
-    ds.withColumn(dest, expr(rule))
+  def expression(rule: String, dest: Option[String])(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
+    val destColumn: String = getOrThrow(dest, "Expression requires dest column " + rule)
+    ds.withColumn(destColumn, expr(rule))
   }
 
 
@@ -97,10 +99,10 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts{
       case Nil => ds
       case x::xs =>
         val append =  x match {
-          case SimpleTransformation(Some(DIRECT_MAP), a, b) => directMap(a, b)(ds)
           case SimpleTransformation(Some(DEFAULT_MAP), a, b)  => defaultMap(a, b)(ds)
-          case SimpleTransformation(Some(IF_ELSE) | Some(EXPRESSION), a, b)  => expression(a, b)(ds)
           case SimpleTransformation(Some(CONCAT), a, b) => concat(a, b)(ds)
+          case SimpleTransformation(Some(WHERE), a, b) => stFilter(a)(ds)
+          case SimpleTransformation(Some(DROP), a, b) => stFilter("not(" + a + ")")(ds)
           case SimpleTransformation(a, b, c) => expression( b, c)(ds)
           case SplitTransformation(a, b, c) => splitTrans(ds, a, b, c)
           case _ => ds
@@ -109,6 +111,9 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts{
     }
   }
 
+  def stFilter(a: String)(implicit ds: Dataset[_] = this.ds): Dataset[_] ={
+    ds.filter(a)
+  }
   /**
     * Selects fields specified
     * @param selCols: Array of columns to select
@@ -136,13 +141,20 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts{
     * @return Returns transformed records
     */
   private def splitTrans(ds: Dataset[_], cond: String, dest_row_trans: List[SimpleTransformation],
-                         source_row_trans: List[SimpleTransformation]) = {
+                         source_row_trans: Option[List[SimpleTransformation]]) = {
      ds.show
      val transOn = ds.where(cond)
      val destRows = stTransform(dest_row_trans)(transOn).toDF
-     val sourceRows = stTransform(source_row_trans)(transOn).toDF
+     val sourceRows = stTransform(source_row_trans.getOrElse(List()))(transOn).toDF
      val filterNotCond = ds.where("not(" + cond + ")").toDF
      filterNotCond union destRows union sourceRows
+  }
+
+  private def getOrThrow[A](str: Option[A], msg: String): A = {
+    if(str == None)
+      throw new Error("Did not find required details " + msg)
+    else
+      str.get
   }
 
 }

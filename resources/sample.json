@@ -1,9 +1,14 @@
 {
     "transforms": [
+
       {
         "ttype": "DirectMap",
         "rule": "Quantity",
         "dest": "Q1"
+      },
+      {
+        "rule": "rand()",
+        "dest": "randCol"
       },
       {
         "ttype": "DirectMap",
@@ -43,6 +48,14 @@
         "ttype": "Split",
         "rule": "(stockCode = '84406B' or stockCode like '84%') and unitPrice != 2.55",
         "dest": "Q1to92Split"
+      },
+      {
+        "ttype": "Where",
+        "rule": "Q1 != 6"
+      },
+      {
+        "ttype": "Drop",
+        "rule": "UP == 0"
       }
 
     ],
@@ -55,7 +68,7 @@
         },
         {
           "rule": "Q1to9 / 2",
-          "dest": "Q1to9"
+          "dest": "randCol"
         }
       ],
       "source_row_trans": [
@@ -65,11 +78,11 @@
         },
         {
           "rule": "Q1to9 / 2",
-          "dest": "Q1to9"
+          "dest": "randCol"
         }
       ]
     }],
-    "select": "UP, UPQ1 as UPQ3, UPQ2, PstockCode, Q1, Q1to9, Q1to9 as Q1to92",
+    "select": "UP, UPQ1 as UPQ3, UPQ2, PstockCode, Q1, Q1to9, Q1to9 as Q1to92, randCol",
     "struct": [
       {
         "name": "invoiceno",
