@@ -5,8 +5,8 @@ import scala.util.{Failure, Success, Try}
 import org.apache.spark.sql.types.StructType
 import org.json4s.native.JsonMethods._
 import org.json4s.DefaultFormats
-import org.singaj.rules.MapperConsts
-import org.singaj.rules.{FieldStructure, Transformations}
+import org.json4s.JsonAST.JValue
+import org.singaj.rules._
 
 
 /**
@@ -15,15 +15,31 @@ import org.singaj.rules.{FieldStructure, Transformations}
 class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperConsts{
 
   implicit val formats = DefaultFormats
+
+  /**
+    * Get SplitTransformations if any of the transformations are marked as Split
+    */
+  lazy val splitT: List[SplitTransformation] = getSplitLogic
   /**
     * @constructor Reads file from given path.
     *              On success, parses json file and stores in jsonDoc
     *              On Failure, throws and error
     */
   protected lazy val fileContents: Try[String] = Try(fromFile(filePath).getLines().mkString)
-  val jsonDoc = fileContents match {
+  val jsonDoc: JValue = fileContents match {
     case Failure(f) => throw new Error("Cant find file " + filePath +  f)
     case Success(json) => parse(json)
+  }
+
+  /**
+    * Get the list of transformation from JSON file.
+    * This is the function that is generally called to retrieve all transformations
+    * Transformations will be applied in the order in which they are listed in JSON file
+    * @return
+    */
+  def parseTransformations: List[Transformations] = {
+    val trans = getTransformations
+    parseAllTransformations(trans, List())
   }
 
   /**
@@ -35,17 +51,16 @@ class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperCon
     *          This element is optional, and if not specified Expression will be assumed
     *   rule: Will contain transformation rule
     *   dest: Name of destination column
-    * @return List[Transformations]: List of transformations
+    * @return List[SimpleTransform]: List of transformations
     */
-  def getTransformations: List[Transformations] = {
+   def getTransformations: List[SimpleTransformation] = {
     Try {
       val trans= jsonDoc \ TRANSFORMS
-      trans.extract[List[Transformations]]
+      trans.extract[List[SimpleTransformation]]
     } match {
-      case Failure(f) => println("No transformations specified"); List()
+      case Failure(f) => println("No transformations specified ", f); List()
       case Success(t) => t
     }
-
   }
 
   /**
@@ -58,7 +73,7 @@ class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperCon
       val sel= jsonDoc \ SELECT
       sel.extract[String].split(",").map(_.trim)
     } match {
-      case Failure(f) => println("Din't find select statement"); Array()
+      case Failure(f) => println("Din't find select statement ", f); Array()
       case Success(s) => s
     }
   }
@@ -80,5 +95,41 @@ class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperCon
       case Success(struct) => StructType(structFieldBuilder(struct, List()))
     }
   }
+
+  /**
+    * Get SplitTransformation logic
+    * @return
+    */
+  def getSplitLogic: List[SplitTransformation] = {
+    Try{
+      val splitLogic = jsonDoc \ SPLIT
+      splitLogic.extract[List[SplitTransformation]]
+    } match {
+      case Failure(f) => throw new Error("Looks like transformation rules for Split is not defined ", f)
+      case Success(s) => s
+    }
+  }
+
+
+  /**
+    * Private function to parseAllTransformations
+    * @param trans : List of SimpleTransform
+    * @param outputT
+    * @return
+    */
+  private def parseAllTransformations(trans: List[SimpleTransformation], outputT: List[Transformations]): List[Transformations] = {
+    trans match {
+      case Nil => outputT.reverse
+      case x::xs => val inBet = x match {
+        case SimpleTransformation(Some("Split"), a, b) => {
+          val split = splitT.find(f => f.name == b).get
+          SplitTransformation(a, split.dest_row_trans, split.source_row_trans) :: outputT
+        }
+        case SimpleTransformation(a, b, c) => SimpleTransformation(a, b, c) :: outputT
+      }
+        parseAllTransformations(xs, inBet)
+    }
+  }
+
 
 }

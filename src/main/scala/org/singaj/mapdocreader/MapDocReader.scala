@@ -1,6 +1,6 @@
 package org.singaj.mapdocreader
 import org.apache.spark.sql.types._
-import org.singaj.rules.{FieldStructure, Transformations}
+import org.singaj.rules.{FieldStructure, SimpleTransformation, Transformations}
 /**
   * Created on 8/26/17.
   * Abstract class to read Mapping Document
@@ -8,10 +8,19 @@ import org.singaj.rules.{FieldStructure, Transformations}
 abstract class MapDocReader {
 
   /**
-    * Abstract method to retrieve all transformations
-    * @return List[Transformations]: List of transformations
+    * Abstract method to parse all transformations. This will
+    * generally be the function called to retrieve all transformations
+    * @return
     */
-  def getTransformations: List[Transformations]
+  def parseTransformations: List[Transformations]
+  /**
+    * Abstract method to retrieve all transformations. This method
+    * will however not get transformations like SplitTransformation.
+    * Use parseTransformations to get all the transformations
+    * @return List[Transformations]: List of SimpleTransform
+    *
+    */
+  def getTransformations: List[SimpleTransformation]
 
   /**
     * Abstract method to retrieve all FieldStructure
@@ -53,7 +62,7 @@ abstract class MapDocReader {
   protected def structFieldBuilder(fs: List[FieldStructure], sf: List[StructField]): List[StructField] = {
     fs match {
       case Nil => sf.reverse
-      case x::xs => {
+      case x::xs =>
         val structFields =  x match {
           case FieldStructure(a, "StringType", y) => StructField(a, StringType, y) :: sf
           case FieldStructure(a, "IntegerType", y) => StructField(a, IntegerType, y) :: sf
@@ -70,7 +79,6 @@ abstract class MapDocReader {
           case FieldStructure(a, "NullType", y) => StructField(a, NullType, y) :: sf
         }
         structFieldBuilder(xs, structFields )
-      }
     }
   }
 

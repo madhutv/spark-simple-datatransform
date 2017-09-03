@@ -38,9 +38,37 @@
       {
         "rule": "case when Q1 = 6 then unitPrice else 0 end",
         "dest": "UPQ2"
+      },
+      {
+        "ttype": "Split",
+        "rule": "Q1 = 6",
+        "dest": "Q1to92Split"
       }
 
     ],
+    "split": [{
+      "name" : "Q1to92Split",
+      "dest_row_trans": [
+        {
+          "rule": "UPQ3 * Q1",
+          "dest": "Q1"
+        },
+        {
+          "rule": "Q1to92 / 2",
+          "dest": "Q1to92"
+        }
+      ],
+      "source_row_trans": [
+        {
+          "rule": "Q1 * 5",
+          "dest": "Q1"
+        },
+        {
+          "rule": "Q1to92 / 2",
+          "dest": "Q1to92"
+        }
+      ]
+    }],
     "select": "UPQ1 as UPQ3, UPQ2, PstockCode, Q1, Q1to9 as Q1to92",
     "struct": [
       {

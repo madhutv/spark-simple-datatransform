@@ -2,7 +2,7 @@ package org.singaj.simpletrans
 
 import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.functions._
-import org.singaj.rules.{MapperConsts, Transformations}
+import org.singaj.rules.{MapperConsts, Transformations, SimpleTransformation}
 
 
 /**
@@ -95,17 +95,16 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts{
   def stTransform(trans: List[Transformations])(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
     trans match {
       case Nil => ds
-      case x::xs => {
+      case x::xs =>
         val append =  x match {
-          case Transformations(Some(DIRECT_MAP), a, b) => directMap(a, b)(ds)
-          case Transformations(Some(DEFAULT_MAP), a, b)  => defaultMap(a, b)(ds)
-          case Transformations(Some(IF_ELSE) | Some(EXPRESSION), a, b)  => expression(a, b)(ds)
-          case Transformations(Some(CONCAT), a, b) => concat(a, b)(ds)
-          case Transformations(a, b, c) => expression( b, c)(ds)
+          case SimpleTransformation(Some(DIRECT_MAP), a, b) => directMap(a, b)(ds)
+          case SimpleTransformation(Some(DEFAULT_MAP), a, b)  => defaultMap(a, b)(ds)
+          case SimpleTransformation(Some(IF_ELSE) | Some(EXPRESSION), a, b)  => expression(a, b)(ds)
+          case SimpleTransformation(Some(CONCAT), a, b) => concat(a, b)(ds)
+          case SimpleTransformation(a, b, c) => expression( b, c)(ds)
           case _ => ds
         }
         stTransform(xs)(append)
-      }
     }
   }
 
@@ -135,5 +134,5 @@ object SimpleTransformer{
     * @param ds: Input Dataset
     * @return SimpliTransfomer wrapping Dataset
     */
-  implicit def datasetToSimTrans(ds: Dataset[_]) = new SimpleTransformer(ds)
+  implicit def datasetToSimTrans(ds: Dataset[_]): SimpleTransformer = new SimpleTransformer(ds)
 }
