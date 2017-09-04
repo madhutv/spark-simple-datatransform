@@ -153,6 +153,14 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts {
     ds.orderBy(cols: _*)
   }
 
+  /**
+    * Select distinct rows. If "all" is provided then, distict will be applied on all
+    * columns. If specific columns are provided, distinct rows will be randomly selected
+    * based on columns provided
+    * @param dist: String Column seperated column names or "all"
+    * @param ds: Dataset: Dataset to which distinct is to be applied
+    * @return : Dataset Transformed dataset
+    */
   def stDistinct(dist: String)(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
     dist.trim match{
       case ALL => ds.distinct
