@@ -66,6 +66,14 @@
       {
         "ttype": "orderBy",
         "rule": "Q1, randCol DSC"
+      },
+      {
+        "ttype": "distinct",
+        "rule": "all"
+      },
+      {
+        "ttype": "distinct",
+        "rule": "UPQ2, Q1"
       }
 
     ],
