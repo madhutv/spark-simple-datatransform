@@ -57,11 +57,15 @@
       },
       {
         "ttype": "where",
-        "rule": "Q1 == 6"
+        "rule": "1 == 1"
       },
       {
         "ttype": "drop",
         "rule": "UP == 0"
+      },
+      {
+        "ttype": "orderBy",
+        "rule": "Q1, randCol DSC"
       }
 
     ],

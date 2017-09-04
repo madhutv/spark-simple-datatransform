@@ -103,13 +103,15 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts {
           case SimpleTransformation(Some(CONCAT), a, b) => concat(a, b)(ds)
           case SimpleTransformation(Some(WHERE), a, b) => stFilter(a)(ds)
           case SimpleTransformation(Some(DROP), a, b) => stFilter("not(" + a + ")")(ds)
-          case SimpleTransformation(a, b, c) => expression( b, c)(ds)
+          case SimpleTransformation(Some(ORDER_BY), a, b) => stOrderBy(a)(ds)
+          case SimpleTransformation(a, b, c) => expression(b, c)(ds)
           case SplitTransformation(a, b, c) => splitTrans(ds, a, b, c)
           case _ => ds
         }
         stTransform(xs)(append)
     }
   }
+
 
   def stFilter(a: String)(implicit ds: Dataset[_] = this.ds): Dataset[_] ={
     ds.filter(a)
@@ -128,6 +130,29 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts {
       case _ => ds.selectExpr(selCols: _*)
     }
   }
+
+  /**
+    * Orderby based on string specified in JSON. Default will be ascending order
+    * to sort by descending order, have DSC in the JSON
+    * @param selCols: String from JSON order by rule
+    * @param ds: Dataset which needs to be sorted
+    * @return :Dataset[_] Sorted dataset
+    */
+  def stOrderBy(selCols: String)(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
+    //Split string by ,
+    val obColumns = selCols.split(",").map(_.trim)
+    //Check if column string contains DSC
+    val cols = obColumns.map(p => {
+     if(p.contains("DSC"))
+        column(p.split("\\s+")(0).trim).desc
+      else
+        column(p)
+    })
+
+    ds.orderBy(cols: _*)
+  }
+
+
 
   /**
     * Private function to handle split transformations. i.e. creating multiple rows

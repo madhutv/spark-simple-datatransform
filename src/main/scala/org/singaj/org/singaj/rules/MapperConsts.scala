@@ -19,6 +19,7 @@ trait MapperConsts {
   lazy val SPLIT = "split"
   lazy val WHERE = "where"
   lazy val DROP = "drop"
+  lazy val ORDER_BY = "orderBy"
   lazy val IO_FILE_FORMAT= "inputOutputFile"
   lazy val INPUT_FILE_PATH = "inputFilePath"
   lazy val INPUT_FILE_NAME = "inputFileName"
