@@ -18,8 +18,11 @@ case class SplitTransformation(name: String, dest_row_trans: List[SimpleTransfor
                       source_row_trans: Option[List[SimpleTransformation]]) extends Transformations
 
 
-case class AggTransformation(name: String, aggregates: Aggregates,
+case class AggTransformation(name: String,
+                             aggregates: Aggregates,
                              groupBy: Option[String],
-                             additional_trans: Option[List[SimpleTransformation]]) extends Transformations
+                             additional_trans: Option[List[SimpleTransformation]],
+                             keepOriginal: Option[Boolean]
+                            ) extends Transformations
 
 case class Aggregates(column: String, rule: String, names: Option[String])

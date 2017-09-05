@@ -107,7 +107,7 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts {
           case SimpleTransformation(Some(DISTINCT), a, b) => stDistinct(a)(ds)
           case SimpleTransformation(a, b, c) => expression(b, c)(ds)
           case SplitTransformation(a, b, c) => splitTrans(a, b, c)(ds)
-          case AggTransformation(a, b, c, d) => stAggregate(a, b, c, d)(ds)
+          case AggTransformation(a, b, c, d, e) => stAggregate(a, b, c, d, e)(ds)
           case _ => ds
         }
         stTransform(xs)(append)
@@ -217,8 +217,12 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts {
 
   def stAggregate(rule: String, aggregates: Aggregates,
                   groupBy: Option[String],
-                  trans: Option[List[SimpleTransformation]])
+                  trans: Option[List[SimpleTransformation]],
+                  keepOriginal: Option[Boolean])
                   (ds: Dataset[_] = this.ds): Dataset[_] = {
+
+    //check if aggregation needs to be performed on a subset of rows
+    val transOn = if(rule.trim == "") ds else ds.selectExpr(rule)
 
     //Get groupby, aggregation column, rules and Names as string
     val (groupCols, aggCols, aggRules, aggNames) = (
@@ -246,15 +250,23 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts {
       throw new Error("Aggregation Column dose not match aggregation rules " + aggregates)
 
     val groupAgg: Dataset[_] = groupCols match {
-      case Array() => ds.agg(aggExpr(0), aggExpr(1))
-      case _ =>  ds.groupBy(groupCols: _*).agg(aggExpr(0), temp: _*)
+      case Array() => transOn.agg(aggExpr(0), aggExpr(1))
+      case _ =>  transOn.groupBy(groupCols: _*).agg(aggExpr(0), temp: _*)
     }
 
-    trans match {
-      case None => groupAgg.show
-      case Some(a) => stTransform(a)(groupAgg).show
+    val dsAfterTrans = trans match {
+      case None => groupAgg
+      case Some(a) => stTransform(a)(groupAgg)
     }
 
+    if(rule.trim != "" && keepOriginal.getOrElse(false) == true){
+      if(ds.columns.deep != dsAfterTrans.columns.deep)
+        throw new Error("Columns do not match in aggregate union")
+      ds.toDF union dsAfterTrans.toDF
+    }
+    if(rule.trim != "" && keepOriginal.getOrElse(false) == false){
+      ds.where("not(" + rule.trim + ")").toDF union dsAfterTrans.toDF
+    }
    ds
 
   }

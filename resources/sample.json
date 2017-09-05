@@ -85,6 +85,7 @@
     "aggregator": [
       {
         "name": "aggregator",
+        "keepOriginal": false,
         "aggregates": {
             "column": "Q1, Q1",
             "rule": "sum, count",

@@ -163,7 +163,7 @@ class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperCon
           SplitTransformation(a, split.dest_row_trans, split.source_row_trans) :: outputT
         case SimpleTransformation(Some(AGGREGATE), a, b) =>
           val agg = aggT.find(f => f.name == b.getOrElse("")).get
-          AggTransformation(a, agg.aggregates, agg.groupBy, agg.additional_trans) :: outputT
+          AggTransformation(a, agg.aggregates, agg.groupBy, agg.additional_trans, agg.keepOriginal) :: outputT
         case SimpleTransformation(a, b, c) => SimpleTransformation(a, b, c) :: outputT
       }
         parseAllTransformations(xs, inBet)
