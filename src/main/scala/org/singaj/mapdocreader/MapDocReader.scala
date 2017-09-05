@@ -78,7 +78,7 @@ abstract class MapDocReader extends InOutFileStructure with MapperConsts{
     * @example  example of sample "UPQ1 as UPQ3, UPQ2, PstockCode, Q1, Q1to9 as Q1to92"
     * @return
     */
-  def getSelectColumns: Array[String]
+  def getSelectColumns: Option[String]
 
 
   /**

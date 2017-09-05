@@ -22,10 +22,6 @@ class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperCon
   lazy val ioFileFormat: Map[String, String] = getIOFileFormat
 
   /**
-    * Get SplitTransformations if any of the transformations are marked as Split
-    */
-  lazy val splitT: List[SplitTransformation] = getSplitLogic
-  /**
     * @constructor Reads file from given path.
     *              On success, parses json file and stores in jsonDoc
     *              On Failure, throws and error
@@ -87,13 +83,13 @@ class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperCon
     * @example : Example of json format: "select": "UPQ1 as UPQ3, UPQ2, PstockCode, Q1, Q1to9 as Q1to92"
     * @return Array of columns name to be selected
     */
-  def getSelectColumns: Array[String] = {
+  def getSelectColumns: Option[String] = {
     Try{
       val sel= jsonDoc \ SELECT
-      sel.extract[String].split(",").map(_.trim)
+      sel.extract[String]
     } match {
-      case Failure(f) => println("Din't find select statement ", f); Array()
-      case Success(s) => s
+      case Failure(f) => println("Din't find select statement ", f); None
+      case Success(s) => Some(s)
     }
   }
 
@@ -130,6 +126,17 @@ class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperCon
   }
 
 
+  def getAggLogic: List[AggTransformation] = {
+    Try{
+      val aggLogic = jsonDoc \ AGGREGATOR
+      aggLogic.extract[List[AggTransformation]]
+    } match {
+      case Failure(f) => throw new Error("Looks like transformation rules for Aggregation is not defined ", f)
+      case Success(s) => s
+    }
+  }
+
+
   /**
     * Private function to parseAllTransformations
     * @param trans : List of SimpleTransform
@@ -137,12 +144,26 @@ class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperCon
     * @return
     */
   private def parseAllTransformations(trans: List[SimpleTransformation], outputT: List[Transformations]): List[Transformations] = {
+    /**
+      * Get SplitTransformations if any of the transformations are marked as Split
+      */
+    lazy val splitT: List[SplitTransformation] = getSplitLogic
+
+    /**
+      * Get Aggransformations if any of the transformations are marked as aggregates
+      */
+    lazy val aggT: List[AggTransformation] = getAggLogic
+
     trans match {
       case Nil => outputT.reverse
       case x::xs => val inBet = x match {
         case SimpleTransformation(Some(SPLIT), a, b) =>
-          val split = splitT.find(f => f.name == b.getOrElse(" ")).get
+          //get split transactions. This will throw and error name is not found.
+          val split = splitT.find(f => f.name == b.getOrElse("")).get
           SplitTransformation(a, split.dest_row_trans, split.source_row_trans) :: outputT
+        case SimpleTransformation(Some(AGGREGATE), a, b) =>
+          val agg = aggT.find(f => f.name == b.getOrElse("")).get
+          AggTransformation(a, agg.aggregates, agg.groupBy, agg.additional_trans) :: outputT
         case SimpleTransformation(a, b, c) => SimpleTransformation(a, b, c) :: outputT
       }
         parseAllTransformations(xs, inBet)

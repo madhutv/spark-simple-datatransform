@@ -22,6 +22,8 @@ trait MapperConsts {
   lazy val ORDER_BY = "orderBy"
   lazy val DISTINCT = "distinct"
   lazy val ALL = "all"
+  lazy val AGGREGATE = "aggregate"
+  lazy val AGGREGATOR = "aggregator"
   lazy val IO_FILE_FORMAT= "inputOutputFile"
   lazy val INPUT_FILE_PATH = "inputFilePath"
   lazy val INPUT_FILE_NAME = "inputFileName"
