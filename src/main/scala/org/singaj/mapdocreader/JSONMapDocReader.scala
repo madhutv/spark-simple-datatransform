@@ -7,12 +7,13 @@ import org.json4s.native.JsonMethods._
 import org.json4s.DefaultFormats
 import org.json4s.JsonAST.JValue
 import org.singaj.rules._
+import org.singaj.utils.STUtils
 
 
 /**
   * Created by madhu on 8/26/17.
   */
-class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperConsts{
+class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperConsts with STUtils{
 
   implicit val formats = DefaultFormats
 
@@ -161,6 +162,7 @@ class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperCon
           //get split transactions. This will throw and error name is not found.
           val split = splitT.find(f => f.name == b.getOrElse("")).get
           SplitTransformation(a, split.dest_row_trans, split.source_row_trans) :: outputT
+          //get Aggregation transations. This will throw an error if name is not found
         case SimpleTransformation(Some(AGGREGATE), a, b) =>
           val agg = aggT.find(f => f.name == b.getOrElse("")).get
           AggTransformation(a, agg.aggregates, agg.groupBy, agg.additional_trans, agg.keepOriginal) :: outputT

@@ -1,15 +1,43 @@
 package org.singaj.simpletrans
 
-import org.apache.spark.sql.{Dataset}
+import org.apache.spark.sql.Dataset
 import org.apache.spark.sql.functions._
 import org.singaj.rules._
+import org.singaj.utils.STUtils
 
 
 /**
   * Created by madhu on 8/26/17.
   */
 
-class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts {
+class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts with STUtils {
+
+  /**
+    * Performs transformations based on List of Transformations and dataset provided
+    * @param trans: List of Transformations
+    * @param ds :  Dataset on which transformation is to be performed.
+    *              This is determined implicitly
+    * @return Dataset: Transformed Dataset
+    */
+  def stTransform(trans: List[Transformations])(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
+    trans match {
+      case Nil => ds
+      case x::xs =>
+        val append =  x match {
+          case SimpleTransformation(Some(DEFAULT_MAP), a, b)  => defaultMap(a, b)(ds)
+          case SimpleTransformation(Some(CONCAT), a, b) => concat(a, b)(ds)
+          case SimpleTransformation(Some(WHERE), a, b) => stFilter(a)(ds)
+          case SimpleTransformation(Some(DROP), a, b) => stFilter("not(" + a + ")")(ds)
+          case SimpleTransformation(Some(ORDER_BY), a, b) => stOrderBy(a)(ds)
+          case SimpleTransformation(Some(DISTINCT), a, b) => stDistinct(a)(ds)
+          case SimpleTransformation(a, b, c) => expression(b, c)(ds)
+          case SplitTransformation(a, b, c) => stSplit(a, b, c)(ds)
+          case AggTransformation(a, b, c, d, e) => stAggregate(a, b, c, d, e)(ds)
+          case _ => ds
+        }
+        stTransform(xs)(append)
+    }
+  }
 
   /**
     * DirectMap is used when one column simply needs to be copied over to
@@ -88,36 +116,15 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts {
 
 
   /**
-    * Performs transformations based on List of Transformations and dataset provided
-    * @param trans: List of Transformations
-    * @param ds :  Dataset on which transformation is to be performed.
-    *              This is determined implicitly
-    * @return Dataset: Transformed Dataset
+    * Filter records based on condition
+    * @param cond: Filter condition
+    * @param ds: Dataset to be filtered
+    * @return : Trasformed dataset
     */
-  def stTransform(trans: List[Transformations])(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
-    trans match {
-      case Nil => ds
-      case x::xs =>
-        val append =  x match {
-          case SimpleTransformation(Some(DEFAULT_MAP), a, b)  => defaultMap(a, b)(ds)
-          case SimpleTransformation(Some(CONCAT), a, b) => concat(a, b)(ds)
-          case SimpleTransformation(Some(WHERE), a, b) => stFilter(a)(ds)
-          case SimpleTransformation(Some(DROP), a, b) => stFilter("not(" + a + ")")(ds)
-          case SimpleTransformation(Some(ORDER_BY), a, b) => stOrderBy(a)(ds)
-          case SimpleTransformation(Some(DISTINCT), a, b) => stDistinct(a)(ds)
-          case SimpleTransformation(a, b, c) => expression(b, c)(ds)
-          case SplitTransformation(a, b, c) => splitTrans(a, b, c)(ds)
-          case AggTransformation(a, b, c, d, e) => stAggregate(a, b, c, d, e)(ds)
-          case _ => ds
-        }
-        stTransform(xs)(append)
-    }
+  def stFilter(cond: String)(implicit ds: Dataset[_] = this.ds): Dataset[_] ={
+    ds.filter(cond)
   }
 
-
-  def stFilter(a: String)(implicit ds: Dataset[_] = this.ds): Dataset[_] ={
-    ds.filter(a)
-  }
   /**
     * Selects fields specified
     * @param selStr: Array of columns to select
@@ -176,7 +183,7 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts {
 
 
   /**
-    * Private function to handle split transformations. i.e. creating multiple rows
+    * Handle split transformations. i.e. creating multiple rows
     * based on certain criteria
     * @param ds: Dataset[_] : Input dataset
     * @param cond: Condition to get records that need to be split
@@ -186,43 +193,53 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts {
     *                        on original rows that satisfied filter criteria
     * @return Returns transformed records
     */
-  private def splitTrans(cond: String, dest_row_trans: List[SimpleTransformation],
+  def stSplit(cond: String, dest_row_trans: List[SimpleTransformation],
                          source_row_trans: Option[List[SimpleTransformation]])
                         (ds: Dataset[_] = this.ds): Dataset[_] = {
 
      //filter rows that match condition specified
      val transOn = ds.where(cond)
      //Apply transformations on resulting rows
-     val destRows = stTransform(dest_row_trans)(transOn).toDF
+     val destRows = stTransform(dest_row_trans)(transOn)
+
     //check if transformations are required on source rows (original rows). If so,
     //perform transformations
-     val sourceRows = stTransform(source_row_trans.getOrElse(List()))(transOn).toDF
+     val sourceRows = stTransform(source_row_trans.getOrElse(List()))(transOn)
     //Get rest of the rows. These will be unioned with transformed rows
-     val filterNotCond = ds.where("not(" + cond + ")").toDF
+     val filterNotCond = dsRemoveOriginal(cond, ds)
 
      //if resulting rows do not match with source rows, throw an error
-     val srcRowCols = sourceRows.columns
-     if(destRows.columns.deep != srcRowCols.deep || srcRowCols.deep != filterNotCond.columns.deep)
-       throw new Error("Columns do not match for split transactions")
+     checkColumnMatch(Array(sourceRows.columns, destRows.columns, filterNotCond.columns))
 
-     filterNotCond union destRows union sourceRows
+     mergeDS(filterNotCond, destRows, sourceRows)
+
   }
 
-  private def getOrThrow[A](str: Option[A], msg: String): A = {
-    if(str == None)
-      throw new Error("Did not find required details " + msg)
-    else
-      str.get
-  }
-
+  /**
+    * Aggregate based on rule. Perform transformations like sum, avg, count and so on
+    * @param rule: Provided if aggregation need to be performed on a subset of records while
+    *             keep rest of records intact
+    * @param aggregates: Case class that holds columns, rules and name(if column to be renamed) as parameters
+    * @param groupBy: Option groupBy clause, provided if group by is needed
+    * @param trans: Additional transformations to be performed on aggregated rows
+    * @param keepOriginal: Boolean : This is relevant if rule is not empty. i.e. if aggregation
+    *                    needs to performed on subset of records. If keepOriginal is set to true,
+    *                    transformed dataset will contain original row, aggregated transformed rows and
+    *                    rest of the dataset. If set to false, this original rows will be dropped
+    * @param ds: Dataset on which aggregation need to be performed
+    * @return : Dataset[_]: aggregated dataset
+    */
   def stAggregate(rule: String, aggregates: Aggregates,
-                  groupBy: Option[String],
-                  trans: Option[List[SimpleTransformation]],
-                  keepOriginal: Option[Boolean])
+                  groupBy: Option[String] = None,
+                  trans: Option[List[SimpleTransformation]] = None,
+                  keepOriginal: Option[Boolean] = Some(false))
                   (ds: Dataset[_] = this.ds): Dataset[_] = {
 
-    //check if aggregation needs to be performed on a subset of rows
-    val transOn = if(rule.trim == "") ds else ds.selectExpr(rule)
+    //check if aggregation need to be performed on full dataset or subset of dataset
+    val aggOnFull: Boolean = rule.trim == ""
+
+    //get dataset on which aggregation need to be performed
+    val transOn = if(aggOnFull) ds else ds.selectExpr(rule)
 
     //Get groupby, aggregation column, rules and Names as string
     val (groupCols, aggCols, aggRules, aggNames) = (
@@ -232,6 +249,11 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts {
                                                      strToArr(aggregates.names)
                                                    )
 
+    //check if aggregation rules are provided by each aggregation columns
+    passOrThrow("Aggregate: Number of columns and rules do not match"){
+      () => aggCols.length == aggRules.length
+    }
+
     //Get size of names and cols
     val (aggNamesSiz, aggColSiz) = (aggNames.length - 1, aggCols.length - 1)
 
@@ -239,55 +261,60 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts {
     val aggExpr = for {
                         i <- (0 to aggColSiz).toArray
                         name = if(i <= aggNamesSiz) aggNames(i) else ""
-                        exp = aggRules(i) + "(" + aggCols(i) +")"
-                      } yield(expr(exp))
+                        exp = aggRules(i) + "(" + aggCols(i) +")" + name
+                      } yield expr(exp)
 
+    //workaround to send first column and set of the columns as aggregation takes column, column*
     val temp = aggExpr.drop(1)
 
-    val withGroups = aggCols.map(expr).zip(aggExpr).groupBy(_._1)
 
-    if(aggCols.length != aggRules.length)
-      throw new Error("Aggregation Column dose not match aggregation rules " + aggregates)
-
+    //check if groupBy clause is provided. If so, apply group by, else just aggregate
     val groupAgg: Dataset[_] = groupCols match {
       case Array() => transOn.agg(aggExpr(0), aggExpr(1))
       case _ =>  transOn.groupBy(groupCols: _*).agg(aggExpr(0), temp: _*)
     }
 
+    //perform any data transformations if required after aggregation
     val dsAfterTrans = trans match {
       case None => groupAgg
       case Some(a) => stTransform(a)(groupAgg)
     }
 
-    if(rule.trim != "" && keepOriginal.getOrElse(false) == true){
-      if(ds.columns.deep != dsAfterTrans.columns.deep)
-        throw new Error("Columns do not match in aggregate union")
-      ds.toDF union dsAfterTrans.toDF
+    //check if any kind of merging is required.
+    if(!aggOnFull){
+      checkColumnMatch(Array(ds.columns, dsAfterTrans.columns))
+      if(keepOriginal.getOrElse(false))
+        mergeDS(ds, dsAfterTrans)
+      else
+        mergeDS(dsRemoveOriginal(rule.trim, ds), dsAfterTrans)
     }
-    if(rule.trim != "" && keepOriginal.getOrElse(false) == false){
-      ds.where("not(" + rule.trim + ")").toDF union dsAfterTrans.toDF
+    else{
+      dsAfterTrans
     }
-   ds
 
   }
 
-  private def strToArr(str: String): Array[String] = {
-    str.split(",").map(_.trim)
+  /**
+    * Keeps the original records in ds or filters them out
+    * @param cond: condition: records statisfying which, will be removed
+    * @param ds: Dataset for transformation
+    * @return :transformed dataset
+    */
+  private def dsRemoveOriginal(cond: String,  ds: Dataset[_]): Dataset[_] = {
+    ds.where("not(" + cond + ")")
   }
 
-  private def strToArr(str: Option[String]): Array[String] = {
-    str match{
-      case None => Array()
-      case Some(a) => strToArr(a)
-    }
-  }
 
-  private def throwError(func: () => Boolean, errMsg: String = "Got an Error. Terminating") = {
-
+  /**
+    * Merges given dataset
+    * @param ds : Datasets to be merged
+    * @return Dataset[_]: Merged dataset
+    */
+  private def mergeDS(ds: Dataset[_]*) = {
+    ds.reduce((ds1, ds2) => ds1.toDF() union ds2.toDF())
   }
 
 }
-
 
 
 /**

@@ -107,6 +107,25 @@
             "ttype": "defaultMap",
             "rule": "1.78",
             "dest": "UPQ3"
+          },
+          {
+            "ttype": "defaultMap",
+            "rule": "39",
+            "dest": "UPQ1"
+          },
+          {
+            "ttype": "defaultMap",
+            "rule": "sum",
+            "dest": "UPQ2"
+          },
+          {
+            "ttype": "directMap",
+            "rule": "sum",
+            "dest": "PstockCode"
+          },
+          {
+            "rule": "rand()",
+            "dest": "randCol"
           }
         ]
       }
