@@ -74,8 +74,61 @@
       {
         "ttype": "distinct",
         "rule": "UPQ2, Q1"
+      },
+      {
+        "ttype": "aggregate",
+        "rule": "",
+        "dest": "aggregator"
       }
 
+    ],
+    "aggregator": [
+      {
+        "name": "aggregator",
+        "keepOriginal": false,
+        "aggregates": {
+            "column": "Q1, Q1",
+            "rule": "sum, count",
+            "names": "sum , count"
+         },
+        "groupBy": "case when Q1 < 4 then 3 else 7 end as Q1, Q1to9",
+        "additional_trans": [
+          {
+            "ttype": "defaultMap",
+            "rule": "2.55",
+            "dest": "UP"
+          },
+          {
+            "ttype": "defaultMap",
+            "rule": "1.78",
+            "dest": "UPQ3"
+          },
+          {
+            "ttype": "defaultMap",
+            "rule": "1.78",
+            "dest": "UPQ3"
+          },
+          {
+            "ttype": "defaultMap",
+            "rule": "39",
+            "dest": "UPQ1"
+          },
+          {
+            "ttype": "defaultMap",
+            "rule": "sum",
+            "dest": "UPQ2"
+          },
+          {
+            "ttype": "directMap",
+            "rule": "sum",
+            "dest": "PstockCode"
+          },
+          {
+            "rule": "rand()",
+            "dest": "randCol"
+          }
+        ]
+      }
     ],
     "split": [{
       "name" : "Q1to92Split",
