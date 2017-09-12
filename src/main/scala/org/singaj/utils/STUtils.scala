@@ -9,13 +9,12 @@ trait STUtils {
     * Function that can be used to check if option is not None.
     * If its None, error will be thrown, else value will be returned
     * @param opt: Option[A]: Option to check
-    * @param msg: String : Message to be displayed on None
     * @tparam A : Type of Option
     * @return
     */
-  protected def getOrThrow[A](opt: Option[A], msg: String): A = {
+  protected def getOrThrow[A](opt: Option[A]): A = {
     if(opt.isEmpty)
-      throw new Error("Did not find required details " + msg)
+      throw new Error("Did not find required details ")
     else
       opt.get
   }
