@@ -72,14 +72,6 @@ abstract class MapDocReader extends InOutFileStructure with MapperConsts{
     */
   def getFieldStructure: StructType
 
-  /**
-    * Reads input file to determine columns to be selected.
-    * Input files may contain just the column name or column name along with renames.
-    * @example  example of sample "UPQ1 as UPQ3, UPQ2, PstockCode, Q1, Q1to9 as Q1to92"
-    * @return
-    */
-  def getSelectColumns: Option[String]
-
 
   /**
     * Get the list of transformation from JSON file.

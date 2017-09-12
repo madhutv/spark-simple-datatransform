@@ -26,10 +26,12 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts with STUtils {
         val append =  x match {
           case SimpleTransformation(Some(DEFAULT_MAP), a, b)  => defaultMap(a, b)(ds)
           case SimpleTransformation(Some(CONCAT), a, b) => concat(a, b)(ds)
-          case SimpleTransformation(Some(WHERE), a, b) => stFilter(a)(ds)
-          case SimpleTransformation(Some(DROP), a, b) => stFilter("not(" + a + ")")(ds)
+          case SimpleTransformation(Some(WHERE), a, b) => stFilter(getOrThrow(a))(ds)
+          case SimpleTransformation(Some(DROP), a, b) => stFilter("not(" + getOrThrow(a) + ")")(ds)
           case SimpleTransformation(Some(ORDER_BY), a, b) => stOrderBy(a)(ds)
           case SimpleTransformation(Some(DISTINCT), a, b) => stDistinct(a)(ds)
+          case SimpleTransformation(Some(JOIN), a, b) => ds
+          case SimpleTransformation(Some(SELECT),a, b) => stSelect(a)
           case SimpleTransformation(a, b, c) => expression(b, c)(ds)
           case SplitTransformation(a, b, c) => stSplit(a, b, c)(ds)
           case AggTransformation(a, b, c, d, e) => stAggregate(a, b, c, d, e)(ds)
@@ -48,7 +50,7 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts with STUtils {
     *              This is determined implicitly
     * @return : Transformed Dataset
     */
-  def directMap(source: String, dest: Option[String])(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
+  def directMap(source: Option[String], dest: Option[String])(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
     expression(source, dest)
   }
 
@@ -61,9 +63,9 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts with STUtils {
     *              This is determined implicitly
     * @return : Transformed Dataset
     */
-  def defaultMap(value: String, dest: Option[String])(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
-   val destColumn: String = getOrThrow(dest, "defaultMap requires dest column")
-    ds.withColumn(destColumn , lit(value))
+  def defaultMap(value: Option[String], dest: Option[String])(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
+   val destColumn: String = getOrThrow(dest)
+    ds.withColumn(destColumn , lit(getOrThrow(value)))
   }
 
   /**
@@ -78,7 +80,7 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts with STUtils {
     *              This is determined implicitly
     * @return Transformed Dataset
     */
-  def ifElse( rule: String, dest: Option[String])(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
+  def ifElse(rule: Option[String], dest: Option[String])(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
     expression(rule, dest)(ds)
   }
 
@@ -93,8 +95,8 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts with STUtils {
     *              This is determined implicitly
     * @return Transformed Dataset
     */
-  def concat(rule: String, dest: Option[String])(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
-    expression("concat" + rule , dest)(ds)
+  def concat(rule: Option[String], dest: Option[String])(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
+    expression(Some("concat" + getOrThrow(rule)) , dest)(ds)
   }
 
   /**
@@ -109,9 +111,9 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts with STUtils {
     * @return Transformed Dataset
     *
     */
-  def expression(rule: String, dest: Option[String])(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
-    val destColumn: String = getOrThrow(dest, "Expression requires dest column " + rule)
-    ds.withColumn(destColumn, expr(rule))
+  def expression(rule: Option[String], dest: Option[String])(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
+    val destColumn: String = getOrThrow(dest)
+    ds.withColumn(destColumn, expr(getOrThrow(rule)))
   }
 
 
@@ -150,9 +152,9 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts with STUtils {
     * @param ds: Dataset which needs to be sorted
     * @return :Dataset[_] Sorted dataset
     */
-  def stOrderBy(orderBy: String)(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
+  def stOrderBy(orderBy: Option[String])(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
     //Split string by ,
-    val obColumns = strToArr(orderBy)
+    val obColumns = strToArr(getOrThrow(orderBy))
 
     //Check if column string contains DSC
     val cols = obColumns.map(p => {
@@ -173,8 +175,9 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts with STUtils {
     * @param ds: Dataset: Dataset to which distinct is to be applied
     * @return : Dataset Transformed dataset
     */
-  def stDistinct(dist: String)(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
-    dist.trim match{
+  def stDistinct(dist: Option[String])(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
+
+    getOrThrow(dist).trim match{
       case ALL => ds.distinct
       case a => ds.dropDuplicates(strToArr(a))
     }
@@ -193,12 +196,13 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts with STUtils {
     *                        on original rows that satisfied filter criteria
     * @return Returns transformed records
     */
-  def stSplit(cond: String, dest_row_trans: List[SimpleTransformation],
+  def stSplit(cond: Option[String], dest_row_trans: List[SimpleTransformation],
                          source_row_trans: Option[List[SimpleTransformation]])
                         (ds: Dataset[_] = this.ds): Dataset[_] = {
 
      //filter rows that match condition specified
-     val transOn = ds.where(cond)
+     val tCond = cond.getOrElse("")
+     val transOn = ds.where(tCond)
      //Apply transformations on resulting rows
      val destRows = stTransform(dest_row_trans)(transOn)
 
@@ -206,7 +210,7 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts with STUtils {
     //perform transformations
      val sourceRows = stTransform(source_row_trans.getOrElse(List()))(transOn)
     //Get rest of the rows. These will be unioned with transformed rows
-     val filterNotCond = dsRemoveOriginal(cond, ds)
+     val filterNotCond = dsRemoveOriginal(tCond, ds)
 
      //if resulting rows do not match with source rows, throw an error
      checkColumnMatch(Array(sourceRows.columns, destRows.columns, filterNotCond.columns))
@@ -229,17 +233,18 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts with STUtils {
     * @param ds: Dataset on which aggregation need to be performed
     * @return : Dataset[_]: aggregated dataset
     */
-  def stAggregate(rule: String, aggregates: Aggregates,
+  def stAggregate(rule: Option[String], aggregates: Aggregates,
                   groupBy: Option[String] = None,
                   trans: Option[List[SimpleTransformation]] = None,
                   keepOriginal: Option[Boolean] = Some(false))
                   (ds: Dataset[_] = this.ds): Dataset[_] = {
 
     //check if aggregation need to be performed on full dataset or subset of dataset
-    val aggOnFull: Boolean = rule.trim == ""
+    val trule = rule.getOrElse("*")
+    val aggOnFull: Boolean = rule.isEmpty
 
     //get dataset on which aggregation need to be performed
-    val transOn = if(aggOnFull) ds else ds.selectExpr(rule)
+    val transOn = if(aggOnFull) ds else ds.selectExpr(trule)
 
     //Get groupby, aggregation column, rules and Names as string
     val (groupCols, aggCols, aggRules, aggNames) = (
@@ -286,7 +291,7 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts with STUtils {
       if(keepOriginal.getOrElse(false))
         mergeDS(ds, dsAfterTrans)
       else
-        mergeDS(dsRemoveOriginal(rule.trim, ds), dsAfterTrans)
+        mergeDS(dsRemoveOriginal(trule.trim, ds), dsAfterTrans)
     }
     else{
       dsAfterTrans

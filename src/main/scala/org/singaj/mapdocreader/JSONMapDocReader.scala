@@ -79,20 +79,6 @@ class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperCon
     }
   }
 
-  /**
-    * Gets the columns to be selected.
-    * @example : Example of json format: "select": "UPQ1 as UPQ3, UPQ2, PstockCode, Q1, Q1to9 as Q1to92"
-    * @return Array of columns name to be selected
-    */
-  def getSelectColumns: Option[String] = {
-    Try{
-      val sel= jsonDoc \ SELECT
-      sel.extract[String]
-    } match {
-      case Failure(f) => println("Din't find select statement ", f); None
-      case Success(s) => Some(s)
-    }
-  }
 
   /**
     * Reads Field Structure from json and builds StructType. See resources/sample.json for
@@ -160,11 +146,11 @@ class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperCon
       case x::xs => val inBet = x match {
         case SimpleTransformation(Some(SPLIT), a, b) =>
           //get split transactions. This will throw and error name is not found.
-          val split = splitT.find(f => f.name == b.getOrElse("")).get
+          val split = getOrThrow(splitT.find(f => f.name == b))
           SplitTransformation(a, split.dest_row_trans, split.source_row_trans) :: outputT
           //get Aggregation transations. This will throw an error if name is not found
         case SimpleTransformation(Some(AGGREGATE), a, b) =>
-          val agg = aggT.find(f => f.name == b.getOrElse("")).get
+          val agg = getOrThrow(aggT.find(f => f.name == b))
           AggTransformation(a, agg.aggregates, agg.groupBy, agg.additional_trans, agg.keepOriginal) :: outputT
         case SimpleTransformation(a, b, c) => SimpleTransformation(a, b, c) :: outputT
       }

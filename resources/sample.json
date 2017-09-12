@@ -1,5 +1,6 @@
 {
     "inputOutputFile": {
+      "inputFilePath": "resources/2010-12-01.csv",
       "inputFileFormat": "csv",
       "inputFileDelimiter": ",",
       "inputFileHasHeader": "true"
@@ -77,10 +78,36 @@
       },
       {
         "ttype": "aggregate",
-        "rule": "",
         "dest": "aggregator"
+      },
+      {
+        "rule": "Q1 + 7",
+        "dest": "Q17"
+      },
+      {
+        "ttype": "join",
+        "rule": "Q1 != 6",
+        "dest": "joiner"
+      },
+      {
+        "ttype": "select",
+        "rule": "UP, UPQ1 as UPQ3, UPQ2, PstockCode, Q1, Q1to9, Q1to9 as Q1to92, randCol, Q17"
       }
+    ],
+    "joins" : [
+      {
+        "name": "",
+        "embed": "resources/joinSample.json",
+        "on": "PstockCode == jp and puma == 'OK'",
+        "joinType": "",
+        "hint": "broadcast",
+        "keepOriginal": false,
+        "additional_trans": [
+          {
 
+          }
+        ]
+      }
     ],
     "aggregator": [
       {
@@ -149,7 +176,6 @@
         }
       ]
     }],
-    "select": "UP, UPQ1 as UPQ3, UPQ2, PstockCode, Q1, Q1to9, Q1to9 as Q1to92, randCol",
     "struct": [
       {
         "name": "invoiceno",
