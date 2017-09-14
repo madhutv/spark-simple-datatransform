@@ -25,6 +25,7 @@ trait MapperConsts {
   lazy val AGGREGATE = "aggregate"
   lazy val AGGREGATOR = "aggregator"
   lazy val JOIN = "join"
+  lazy val JOINS = "joins"
   lazy val IO_FILE_FORMAT= "inputOutputFile"
   lazy val INPUT_FILE_PATH = "inputFilePath"
   lazy val INPUT_FILE_NAME = "inputFileName"

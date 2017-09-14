@@ -33,10 +33,11 @@ case class AggTransformation(name: Option[String],
 
 case class JoinTransformation(name: Option[String],
                               embed: Option[String],
-                              joins: Joins,
+                              on: String,
+                              joinType: Option[String],
+                              hint: Option[String],
                               additional_trans: Option[List[SimpleTransformation]],
                               keepOriginal: Option[Boolean]
-                             )
+                             ) extends Transformations
 
 case class Aggregates(column: String, rule: String, names: Option[String])
-case class Joins(on: String, joinType: Option[String], hint: Option[String])
