@@ -96,7 +96,7 @@
     ],
     "joins" : [
       {
-        "name": "",
+        "name": "joiner",
         "embed": "resources/joinSample.json",
         "on": "PstockCode == jp and puma == 'OK'",
         "joinType": "",

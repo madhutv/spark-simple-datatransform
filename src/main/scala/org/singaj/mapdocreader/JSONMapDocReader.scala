@@ -123,6 +123,15 @@ class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperCon
     }
   }
 
+  def getJoinLogic: List[JoinTransformation] = {
+    Try{
+      val joinLogic = jsonDoc \ JOINS
+      joinLogic.extract[List[JoinTransformation]]
+    } match {
+      case Failure(f) => throw new Error("Looks like transformation rules for Join is not defined ", f)
+      case Success(s) => s
+    }
+  }
 
   /**
     * Private function to parseAllTransformations
@@ -141,19 +150,37 @@ class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperCon
       */
     lazy val aggT: List[AggTransformation] = getAggLogic
 
+    /**
+      * Get Join transformations if any transformations are marked as joins
+      */
+    lazy val joinT: List[JoinTransformation] = getJoinLogic
+
     trans match {
+
       case Nil => outputT.reverse
+
       case x::xs => val inBet = x match {
+
         case SimpleTransformation(Some(SPLIT), a, b) =>
           //get split transactions. This will throw and error name is not found.
           val split = getOrThrow(splitT.find(f => f.name == b))
           SplitTransformation(a, split.dest_row_trans, split.source_row_trans) :: outputT
           //get Aggregation transations. This will throw an error if name is not found
+
         case SimpleTransformation(Some(AGGREGATE), a, b) =>
           val agg = getOrThrow(aggT.find(f => f.name == b))
           AggTransformation(a, agg.aggregates, agg.groupBy, agg.additional_trans, agg.keepOriginal) :: outputT
+
+        case SimpleTransformation(Some(JOIN), filter, name) =>
+          val join = getOrThrow(joinT.find(f => f.name == name))
+          JoinTransformation(filter, join.embed, join.on,
+                             join.joinType, join.hint,
+                             join.additional_trans, join.keepOriginal) :: outputT
+
         case SimpleTransformation(a, b, c) => SimpleTransformation(a, b, c) :: outputT
+
       }
+
         parseAllTransformations(xs, inBet)
     }
   }
