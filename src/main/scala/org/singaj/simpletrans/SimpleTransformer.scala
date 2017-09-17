@@ -10,7 +10,7 @@ import org.singaj.utils.STUtils
   * Created by madhu on 8/26/17.
   */
 
-class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts with STUtils {
+abstract class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts with STUtils {
 
   /**
     * Performs transformations based on List of Transformations and dataset provided
@@ -321,15 +321,3 @@ class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts with STUtils {
 
 }
 
-
-/**
-  * Used for implicit conversion from dataset to SimpleTransformer
-  */
-object SimpleTransformer{
-  /**
-    * Implicit conversion from Dataset to SimpleTransformer
-    * @param ds: Input Dataset
-    * @return SimpliTransfomer wrapping Dataset
-    */
-  implicit def datasetToSimTrans(ds: Dataset[_]): SimpleTransformer = new SimpleTransformer(ds)
-}
