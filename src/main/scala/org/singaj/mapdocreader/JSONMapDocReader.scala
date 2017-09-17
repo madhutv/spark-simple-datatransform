@@ -13,7 +13,7 @@ import org.singaj.utils.STUtils
 /**
   * Created by madhu on 8/26/17.
   */
-class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperConsts with STUtils{
+class JSONMapDocReader(val jsonString: String) extends MapDocReader with MapperConsts with STUtils{
 
   implicit val formats = DefaultFormats
 
@@ -27,11 +27,7 @@ class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperCon
     *              On success, parses json file and stores in jsonDoc
     *              On Failure, throws and error
     */
-  protected lazy val fileContents: Try[String] = Try(fromFile(filePath).getLines().mkString)
-  val jsonDoc: JValue = fileContents match {
-    case Failure(f) => throw new Error("Cant find file " + filePath +  f)
-    case Success(json) => parse(json)
-  }
+  val jsonDoc: JValue = parse(jsonString)
 
   /**
     * Get inputout file formats from JSON.
@@ -42,7 +38,7 @@ class JSONMapDocReader(val filePath: String) extends MapDocReader with MapperCon
       val trans= jsonDoc \ IO_FILE_FORMAT
       trans.extract[Map[String, String]]
     } match {
-      case Failure(f) => println("No transformations specified ", f); Map()
+      case Failure(f) => println("No File Structure specified, using defaults ", f); Map()
       case Success(t) => t
     }
   }

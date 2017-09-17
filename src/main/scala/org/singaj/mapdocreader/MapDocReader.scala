@@ -5,40 +5,16 @@ import org.singaj.rules.{FieldStructure, MapperConsts, SimpleTransformation, Tra
   * Created on 8/26/17.
   * Abstract class to read Mapping Document
   */
-abstract class MapDocReader extends InOutFileStructure with MapperConsts{
+abstract class MapDocReader extends  MapperConsts{
 
   /**
     * Input output file format
     */
   val ioFileFormat: Map[String, String]
 
-  /**
-    * Override input and output file variables if needed.
-    */
-  override lazy val inputFilePath: String = ioFileFormat.getOrElse(INPUT_FILE_PATH, super.inputFilePath)
-  override lazy val inputFileName: String = ioFileFormat.getOrElse(INPUT_FILE_NAME, super.inputFileName)
-  override lazy val inputFileFormat: String  = ioFileFormat.getOrElse(INPUT_FILE_FORMAT, super.inputFileFormat)
-  override lazy val inputFileDelimiter: String = ioFileFormat.getOrElse(INPUT_FILE_DELIMITER, super.inputFileDelimiter)
-
-  override lazy val outputFilePath: String = ioFileFormat.getOrElse(OUTPUT_FILE_PATH, super.outputFilePath)
-  override lazy val outputFileName: String = ioFileFormat.getOrElse(OUTPUT_FILE_NAME, super.outputFileName)
-  override lazy val outputFileFormat: String = ioFileFormat.getOrElse(OUTPUT_FILE_FORMAT, super.outputFileFormat)
-  override lazy val outputFileDelimiter: String = ioFileFormat.getOrElse(OUTPUT_FILE_DELIMITER, super.outputFileDelimiter)
 
 
-  override lazy val inputFileHasHeader: Boolean = {
-    if(ioFileFormat.contains(INPUT_FILE_HAS_HEADER))
-      ioFileFormat.get(INPUT_FILE_HAS_HEADER) == Some("true")
-    else super.inputFileHasHeader
-  }
-
-
-  override lazy val outputFileHasHeader: Boolean = {
-    if(ioFileFormat.contains(OUTPUT_FILE_HAS_HEADER))
-      ioFileFormat.get(OUTPUT_FILE_HAS_HEADER) == Some("true")
-    else
-      super.outputFileHasHeader
-  }
+  def getIOFileFormat: Map[String, String]
 
   /**
     * Abstract method to retrieve all transformations. This method
