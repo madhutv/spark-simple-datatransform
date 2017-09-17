@@ -6,7 +6,7 @@ import org.scalatest.FunSuite
 import org.apache.spark.sql.types.{LongType, StructField, StructType}
 import org.singaj.mapdocreader.JSONMapDocReader
 import org.singaj.rules.{SimpleTransformation, Transformations}
-import org.singaj.simpletrans.SimpleTransformer._
+import org.singaj.simpletrans.ImplSimpleTransformer._
 
 
 

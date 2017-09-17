@@ -1,7 +1,7 @@
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 import org.singaj.mapdocreader.JSONMapDocReader
-import org.singaj.simpletrans.SimpleTransformer._
+import org.singaj.simpletrans.ImplSimpleTransformer._
 import org.apache.spark.sql.functions._
 /**
   * Created by madhu on 8/27/17.
