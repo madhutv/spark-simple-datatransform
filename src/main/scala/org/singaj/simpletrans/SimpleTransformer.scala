@@ -35,6 +35,8 @@ abstract class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts with S
           case SimpleTransformation(a, b, c) => expression(b, c)(ds)
           case SplitTransformation(a, b, c) => stSplit(a, b, c)(ds)
           case AggTransformation(a, b, c, d, e) => stAggregate(a, b, c, d, e)(ds)
+          case JoinTransformation(filter, table, on, joinType, hint, at, ko) =>
+                stJoin(filter, table, on, joinType, hint, at, ko)(ds)
           case _ => ds
         }
         stTransform(xs)(append)
@@ -136,13 +138,11 @@ abstract class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts with S
     */
 
   def stSelect(selStr: Option[String])(implicit ds: Dataset[_] = this.ds): Dataset[_] = {
-
-     val selCols = strToArr(selStr)
+    val selCols = strToArr(selStr)
     selCols match {
       case Array() => ds
       case _ => ds.selectExpr(selCols: _*)
     }
-
   }
 
   /**
@@ -299,6 +299,23 @@ abstract class SimpleTransformer(val ds: Dataset[_]) extends MapperConsts with S
 
   }
 
+  def stJoin(filter: Option[String], table: Option[String], on: String,
+             joinType: Option[String], hint: Option[String],
+             additional_trans: Option[List[SimpleTransformation]],
+             keepOriginal: Option[Boolean])(ds: Dataset[_] = this.ds): Dataset[_] = {
+
+    // getFullOrSubsetDS(filter, ds)
+    ds
+  }
+
+  /**
+    * This method takes in an Optional rule and dataset. If rule is None, then
+    * it returns original dataset else subset Dataset
+    * @return
+    */
+  private def getFullOrSubsetDS(rule: Option[String], ds: Dataset[_]): Dataset[_] = {
+    if(rule.isEmpty) ds else ds.selectExpr(rule.getOrElse("*"))
+  }
   /**
     * Keeps the original records in ds or filters them out
     * @param cond: condition: records statisfying which, will be removed

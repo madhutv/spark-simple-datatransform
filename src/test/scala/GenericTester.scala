@@ -15,7 +15,7 @@ import org.singaj.simpletrans.ImplSimpleTransformer._
   */
 class GenericTester extends FunSuite {
 
-  val mapper = new JSONMapDocReader("resources/sample.json")
+ /* val mapper = new JSONMapDocReader("resources/sample.json")
   val mapperError = new JSONMapDocReader("resources/sampleError.json")
   val transformations = mapper.parseTransformations
   val struct = mapper.getFieldStructure
@@ -106,6 +106,6 @@ class GenericTester extends FunSuite {
    // assert(cols.length == 8)
    // expArr.foreach(a => assert(cols.contains(a)))
 
-  }
+  }*/
 
 }

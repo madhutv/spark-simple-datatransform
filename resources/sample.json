@@ -97,7 +97,7 @@
     "joins" : [
       {
         "name": "joiner",
-        "embed": "resources/joinSample.json",
+        "table": "resources/joinSample.json",
         "on": "PstockCode == jp and puma == 'OK'",
         "joinType": "",
         "hint": "broadcast",

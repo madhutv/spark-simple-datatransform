@@ -1,6 +1,6 @@
 package org.singaj.mapdocreader
 import org.apache.spark.sql.types._
-import org.singaj.rules.{FieldStructure, MapperConsts, SimpleTransformation, Transformations}
+import org.singaj.rules._
 /**
   * Created on 8/26/17.
   * Abstract class to read Mapping Document
@@ -48,14 +48,11 @@ abstract class MapDocReader extends  MapperConsts{
     */
   def getFieldStructure: StructType
 
+  def getSplitLogic: List[SplitTransformation]
 
-  /**
-    * Get the list of transformation from JSON file.
-    * This is the function that is generally called to retrieve all transformations
-    * Transformations will be applied in the order in which they are listed in JSON file
-    * @return
-    */
-  def parseTransformations: List[Transformations]
+  def getAggLogic: List[AggTransformation]
+
+  def getJoinLogic: List[JoinTransformation]
 
   /**
     * Recursive method takes in List of FieldStructure and generates List of spark StructField

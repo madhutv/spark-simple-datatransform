@@ -24,10 +24,10 @@ object UsageTest {
     val tParser = new TransformationParser(jsonT)
 
     //Read StructType rules
-    val struct = jsonT.getFieldStructure
+    val struct = tParser.parseStructTypes
     //Get select columns from Json.
 
-    val temp = jsonT.parseTransformations
+    val temp = tParser.parseTransformations
 
 
     //Read Dataset

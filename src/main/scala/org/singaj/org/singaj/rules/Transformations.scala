@@ -32,7 +32,7 @@ case class AggTransformation(name: Option[String],
                             ) extends Transformations
 
 case class JoinTransformation(name: Option[String],
-                              embed: Option[String],
+                              table: Option[String],
                               on: String,
                               joinType: Option[String],
                               hint: Option[String],
