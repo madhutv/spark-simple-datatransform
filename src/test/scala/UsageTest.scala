@@ -2,6 +2,7 @@ import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 import org.singaj.mapdocreader.JSONMapDocReader
 import org.singaj.simpletrans.ImplSimpleTransformer._
+import org.singaj.mapdocreader.TransformationParser
 import org.apache.spark.sql.functions._
 /**
   * Created by madhu on 8/27/17.
@@ -10,9 +11,17 @@ object UsageTest {
 
   def main(args: Array[String]): Unit = {
 
-    //Read Json
+    //Read Jsons
     println("World Peace")
-    val jsonT = new JSONMapDocReader("resources/sample.json")
+    //Usual Spark stuff
+    val sc = new SparkConf().setAppName("Peace").setMaster("local")
+    val spark = SparkSession.builder.config(sc).getOrCreate
+
+    import spark.implicits._
+
+    val json =  spark.read.textFile("resources/sample.json").collect().mkString
+    val jsonT = new JSONMapDocReader(json)
+    val tParser = new TransformationParser(jsonT)
 
     //Read StructType rules
     val struct = jsonT.getFieldStructure
@@ -20,16 +29,11 @@ object UsageTest {
 
     val temp = jsonT.parseTransformations
 
-    //Usual Spark stuff
-    val sc = new SparkConf().setAppName("Peace").setMaster("local")
-    val spark = SparkSession.builder.config(sc).getOrCreate
-
-    import spark.implicits._
 
     //Read Dataset
-    val initial = spark.read.format(jsonT.inputFileFormat)
-                            .option("delimiter", jsonT.inputFileDelimiter)
-                            .option("header", jsonT.inputFileHasHeader)
+    val initial = spark.read.format(tParser.inputFileFormat)
+                            .option("delimiter", tParser.inputFileDelimiter)
+                            .option("header", tParser.inputFileHasHeader)
                             .schema(struct)
                             .load("resources/test.csv")
 
